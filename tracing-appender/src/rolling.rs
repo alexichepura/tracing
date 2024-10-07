@@ -602,7 +602,7 @@ impl Inner {
                     return None;
                 }
 
-                let created = metadata.created().ok()?;
+                let created = metadata.modified().ok()?;
                 Some((entry, created))
             })
             .collect::<Vec<_>>()
