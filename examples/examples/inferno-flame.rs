@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use std::{
     env,
     fs::File,
@@ -6,18 +7,37 @@ use std::{
     thread::sleep,
     time::Duration,
 };
+||||||| 386969ba
+use std::fs::File;
+use std::io::{BufReader, BufWriter};
+use std::path::Path;
+use std::thread::sleep;
+use std::time::Duration;
+use tempdir::TempDir;
+=======
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
+use std::{
+    env,
+    fs::File,
+    io::{BufReader, BufWriter},
+    path::{Path, PathBuf},
+    thread::sleep,
+    time::Duration,
+};
+>>>>>>> origin/master
 use tracing::{span, Level};
-use tracing_flame::FlameLayer;
+use tracing_flame::FlameSubscriber;
 use tracing_subscriber::{prelude::*, registry::Registry};
 
 static PATH: &str = "flame.folded";
 
-fn setup_global_subscriber(dir: &Path) -> impl Drop {
-    let (flame_layer, _guard) = FlameLayer::with_file(dir.join(PATH)).unwrap();
+fn setup_global_collector(dir: &Path) -> impl Drop {
+    let (flame_layer, _guard) = FlameSubscriber::with_file(dir.join(PATH)).unwrap();
 
-    let subscriber = Registry::default().with(flame_layer);
+    let collector = Registry::default().with(flame_layer);
 
-    tracing::subscriber::set_global_default(subscriber).unwrap();
+    tracing::collect::set_global_default(collector).unwrap();
 
     _guard
 }
@@ -44,11 +64,22 @@ fn main() {
     };
 
     // setup the flame layer
+<<<<<<< HEAD
     let tmp_dir = tempfile::Builder::new()
         .prefix("flamegraphs")
         .tempdir()
         .expect("failed to create temporary directory");
     let guard = setup_global_subscriber(tmp_dir.path());
+||||||| 386969ba
+    let tmp_dir = TempDir::new("flamegraphs").unwrap();
+    let guard = setup_global_subscriber(tmp_dir.path());
+=======
+    let tmp_dir = tempfile::Builder::new()
+        .prefix("flamegraphs")
+        .tempdir()
+        .expect("failed to create temporary directory");
+    let guard = setup_global_collector(tmp_dir.path());
+>>>>>>> origin/master
 
     // do a bunch of span entering and exiting to simulate a program running
     span!(Level::ERROR, "outer").in_scope(|| {

@@ -16,7 +16,15 @@ tracing-core = { path = "../../tracing-core" }
 [dependencies.tracing]
 path = ".."
 features = ["max_level_debug", "release_max_level_info"]
+<<<<<<< HEAD
 
 [dev-dependencies]
 tokio-test = "0.2.0"
 tracing-mock = { path = "../../tracing-mock", features = ["tokio-test"] }
+||||||| 386969ba
+=======
+
+[dev-dependencies]
+tokio-test = "0.2.0"
+tracing-test = { path = "../../tracing-test" }
+>>>>>>> origin/master

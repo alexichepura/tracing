@@ -16,7 +16,13 @@
 //!
 //! ```toml
 //! [dependencies]
+<<<<<<< HEAD
 //! tracing-attributes = "0.1.24"
+||||||| 386969ba
+//! tracing-attributes = "0.1.11"
+=======
+//! tracing = "0.1"
+>>>>>>> origin/master
 //! ```
 //!
 //! The [`#[instrument]`][instrument] attribute can now be added to a function
@@ -35,8 +41,14 @@
 //! ```
 //!
 //! [`tracing`]: https://crates.io/crates/tracing
+//! [instrument]: macro@instrument
 //! [span]: https://docs.rs/tracing/latest/tracing/span/index.html
+<<<<<<< HEAD
 //! [instrument]: macro@self::instrument
+||||||| 386969ba
+//! [instrument]: attr.instrument.html
+=======
+>>>>>>> origin/master
 //!
 //! ## Supported Rust Versions
 //!
@@ -54,9 +66,15 @@
 //!
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png",
+    html_favicon_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/favicon.ico",
     issue_tracker_base_url = "https://github.com/tokio-rs/tracing/issues/"
 )]
+<<<<<<< HEAD
 #![cfg_attr(docsrs, deny(rustdoc::broken_intra_doc_links))]
+||||||| 386969ba
+#![cfg_attr(docsrs, deny(broken_intra_doc_links))]
+=======
+>>>>>>> origin/master
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -78,10 +96,22 @@
     unused_parens,
     while_true
 )]
+<<<<<<< HEAD
 // TODO: once `tracing` bumps its MSRV to 1.42, remove this allow.
 #![allow(unused)]
 extern crate proc_macro;
 
+||||||| 386969ba
+// TODO: once `tracing` bumps its MSRV to 1.42, remove this allow.
+#![allow(unused)]
+extern crate proc_macro;
+
+use std::collections::{HashMap, HashSet};
+use std::iter;
+
+=======
+
+>>>>>>> origin/master
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
@@ -92,6 +122,7 @@ mod expand;
 /// Instruments a function to create and enter a `tracing` [span] every time
 /// the function is called.
 ///
+<<<<<<< HEAD
 /// Unless overridden, a span with the [`INFO`] [level] will be generated.
 /// The generated span's name will be the name of the function.
 /// By default, all arguments to the function are included as fields on the
@@ -157,9 +188,36 @@ mod expand;
 /// not implement [`fmt::Debug`], or to exclude an argument with a verbose or
 /// costly `Debug` implementation. Note that:
 ///
+||||||| 386969ba
+/// Unless overriden, a span with `info` level will be generated.
+/// The generated span's name will be the name of the function. Any arguments
+/// to that function will be recorded as fields using [`fmt::Debug`]. To skip
+/// recording a function's or method's argument, pass the argument's name
+/// to the `skip` argument on the `#[instrument]` macro. For example,
+/// `skip` can be used when an argument to an instrumented function does
+/// not implement [`fmt::Debug`], or to exclude an argument with a verbose
+/// or costly Debug implementation. Note that:
+=======
+/// Unless overridden, a span with `info` level will be generated.
+/// The generated span's name will be the name of the function.
+/// By default, all arguments to the function are included as fields on the
+/// span. Arguments that are `tracing` [primitive types] implementing the
+/// [`Value` trait] will be recorded as fields of that type. Types which do
+/// not implement `Value` will be recorded using [`std::fmt::Debug`].
+///
+/// [primitive types]: https://docs.rs/tracing/latest/tracing/field/trait.Value.html#foreign-impls
+/// [`Value` trait]: https://docs.rs/tracing/latest/tracing/field/trait.Value.html
+///
+/// To skip recording a function's or method's argument, pass the argument's name
+/// to the `skip` argument on the `#[instrument]` macro. For example,
+/// `skip` can be used when an argument to an instrumented function does
+/// not implement [`fmt::Debug`], or to exclude an argument with a verbose
+/// or costly Debug implementation. Note that:
+>>>>>>> origin/master
 /// - multiple argument names can be passed to `skip`.
 /// - arguments passed to `skip` do _not_ need to implement `fmt::Debug`.
 ///
+<<<<<<< HEAD
 /// You can also use `skip_all` to skip all arguments.
 ///
 /// ## Examples
@@ -214,6 +272,19 @@ mod expand;
 /// arguments to the function may be used in these expressions. Field names may
 /// also be specified *without* values. Doing so will result in an [empty field]
 /// whose value may be recorded later within the function body.
+||||||| 386969ba
+/// You can also pass additional fields (key-value pairs with arbitrary data)
+/// to the generated span. This is achieved using the `fields` argument on the
+/// `#[instrument]` macro. You can use a string, integer or boolean literal as
+/// a value for each field. The name of the field must be a single valid Rust
+/// identifier, nested (dotted) field names are not supported.
+=======
+/// Additional fields (key-value pairs with arbitrary data) can be passed to
+/// to the generated span through the `fields` argument on the
+/// `#[instrument]` macro. Strings, integers or boolean literals are accepted values
+/// for each field. The name of the field must be a single valid Rust
+/// identifier, nested (dotted) field names are not supported.
+>>>>>>> origin/master
 ///
 /// Note that overlap between the names of fields and (non-skipped) arguments
 /// will result in a compile error.
@@ -413,6 +484,7 @@ mod expand;
 /// }
 /// ```
 ///
+<<<<<<< HEAD
 /// Adding the `ret` argument to `#[instrument]` will emit an event with the function's
 /// return value when the function returns:
 ///
@@ -455,6 +527,53 @@ mod expand;
 ///
 /// If the function returns a `Result<T, E>` and `E` implements `std::fmt::Display`, adding
 /// `err` or `err(Display)` will emit error events when the function returns `Err`:
+||||||| 386969ba
+/// If the function returns a `Result<T, E>` and `E` implements `std::fmt::Display`, you can add
+/// `err` to emit error events when the function returns `Err`:
+=======
+/// Adding the `ret` argument to `#[instrument]` will emit an event with the function's
+/// return value when the function returns:
+///
+/// ```
+/// # use tracing_attributes::instrument;
+/// #[instrument(ret)]
+/// fn my_function() -> i32 {
+///     42
+/// }
+/// ```
+/// The level of the return value event defaults to the same level as the span generated by `#[instrument]`.
+/// By default, this will be `TRACE`, but if the span level is overridden, the event will be at the same
+/// level.
+///
+/// It's also possible to override the level for the `ret` event independently:
+///
+/// ```
+/// # use tracing_attributes::instrument;
+/// # use tracing::Level;
+/// #[instrument(ret(level = Level::WARN))]
+/// fn my_function() -> i32 {
+///     42
+/// }
+/// ```
+///
+/// **Note**:  if the function returns a `Result<T, E>`, `ret` will record returned values if and
+/// only if the function returns [`Result::Ok`].
+///
+/// By default, returned values will be recorded using their [`std::fmt::Debug`] implementations.
+/// If a returned value implements [`std::fmt::Display`], it can be recorded using its `Display`
+/// implementation instead, by writing `ret(Display)`:
+///
+/// ```
+/// # use tracing_attributes::instrument;
+/// #[instrument(ret(Display))]
+/// fn my_function() -> i32 {
+///     42
+/// }
+/// ```
+///
+/// If the function returns a `Result<T, E>` and `E` implements `std::fmt::Display`, adding
+/// `err` or `err(Display)` will emit error events when the function returns `Err`:
+>>>>>>> origin/master
 ///
 /// ```
 /// # use tracing_attributes::instrument;
@@ -547,6 +666,7 @@ mod expand;
 /// ```
 ///
 /// [span]: https://docs.rs/tracing/latest/tracing/span/index.html
+<<<<<<< HEAD
 /// [name]: https://docs.rs/tracing/latest/tracing/struct.Metadata.html#method.name
 /// [target]: https://docs.rs/tracing/latest/tracing/struct.Metadata.html#method.target
 /// [level]: https://docs.rs/tracing/latest/tracing/struct.Level.html
@@ -555,6 +675,10 @@ mod expand;
 /// [empty field]: https://docs.rs/tracing/latest/tracing/field/struct.Empty.html
 /// [field syntax]: https://docs.rs/tracing/latest/tracing/#recording-fields
 /// [`follows_from`]: https://docs.rs/tracing/latest/tracing/struct.Span.html#method.follows_from
+||||||| 386969ba
+=======
+/// [`follows_from`]: https://docs.rs/tracing/latest/tracing/struct.Span.html#method.follows_from
+>>>>>>> origin/master
 /// [`tracing`]: https://github.com/tokio-rs/tracing
 /// [`fmt::Debug`]: std::fmt::Debug
 /// [`Level`]: https://docs.rs/tracing/latest/tracing/struct.Level.html

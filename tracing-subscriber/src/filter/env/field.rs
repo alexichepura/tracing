@@ -13,7 +13,13 @@ use std::{
 use super::{FieldMap, LevelFilter};
 use tracing_core::field::{Field, Visit};
 
+<<<<<<< HEAD
 #[derive(Clone, Debug, Eq, PartialEq)]
+||||||| 386969ba
+#[derive(Debug, Eq, PartialEq)]
+=======
+#[derive(Debug, Eq, PartialEq, Clone)]
+>>>>>>> origin/master
 pub(crate) struct Match {
     pub(crate) name: String, // TODO: allow match patterns for names?
     pub(crate) value: Option<ValueMatch>,
@@ -266,8 +272,14 @@ impl fmt::Display for ValueMatch {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ValueMatch::Bool(ref inner) => fmt::Display::fmt(inner, f),
+<<<<<<< HEAD
             ValueMatch::F64(ref inner) => fmt::Display::fmt(inner, f),
             ValueMatch::NaN => fmt::Display::fmt(&std::f64::NAN, f),
+||||||| 386969ba
+=======
+            ValueMatch::F64(ref inner) => fmt::Display::fmt(inner, f),
+            ValueMatch::NaN => fmt::Display::fmt(&f64::NAN, f),
+>>>>>>> origin/master
             ValueMatch::I64(ref inner) => fmt::Display::fmt(inner, f),
             ValueMatch::U64(ref inner) => fmt::Display::fmt(inner, f),
             ValueMatch::Debug(ref inner) => fmt::Display::fmt(inner, f),
@@ -281,7 +293,7 @@ impl fmt::Display for ValueMatch {
 impl FromStr for MatchPattern {
     type Err = matchers::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let matcher = s.parse::<Pattern>()?;
+        let matcher = Pattern::new_anchored(s)?;
         Ok(Self {
             matcher,
             pattern: s.to_owned().into(),
@@ -501,6 +513,7 @@ impl SpanMatch {
 }
 
 impl<'a> Visit for MatchVisitor<'a> {
+<<<<<<< HEAD
     fn record_f64(&mut self, field: &Field, value: f64) {
         match self.inner.fields.get(field) {
             Some((ValueMatch::NaN, ref matched)) if value.is_nan() => {
@@ -515,6 +528,23 @@ impl<'a> Visit for MatchVisitor<'a> {
         }
     }
 
+||||||| 386969ba
+=======
+    fn record_f64(&mut self, field: &Field, value: f64) {
+        match self.inner.fields.get(field) {
+            Some((ValueMatch::NaN, ref matched)) if value.is_nan() => {
+                matched.store(true, Release);
+            }
+            Some((ValueMatch::F64(ref e), ref matched))
+                if (value - *e).abs() < f64::EPSILON =>
+            {
+                matched.store(true, Release);
+            }
+            _ => {}
+        }
+    }
+
+>>>>>>> origin/master
     fn record_i64(&mut self, field: &Field, value: i64) {
         use std::convert::TryInto;
 

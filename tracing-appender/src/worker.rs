@@ -67,6 +67,7 @@ impl<T: Write + Send + 'static> Worker<T> {
     }
 
     /// Creates a worker thread that processes a channel until it's disconnected
+<<<<<<< HEAD
     pub(crate) fn worker_thread(mut self, name: String) -> std::thread::JoinHandle<()> {
         thread::Builder::new()
             .name(name)
@@ -81,12 +82,49 @@ impl<T: Write + Send + 'static> Worker<T> {
                         Err(_) => {
                             // TODO: Expose a metric for IO Errors, or print to stderr
                         }
+||||||| 386969ba
+    pub(crate) fn worker_thread(mut self) -> std::thread::JoinHandle<()> {
+        thread::spawn(move || {
+            loop {
+                match self.work() {
+                    Ok(WorkerState::Continue) | Ok(WorkerState::Empty) => {}
+                    Ok(WorkerState::Shutdown) | Ok(WorkerState::Disconnected) => break,
+                    Err(_) => {
+                        // TODO: Expose a metric for IO Errors, or print to stderr
+=======
+    pub(crate) fn worker_thread(mut self, name: String) -> std::thread::JoinHandle<()> {
+        thread::Builder::new()
+            .name(name)
+            .spawn(move || {
+                loop {
+                    match self.work() {
+                        Ok(WorkerState::Continue) | Ok(WorkerState::Empty) => {}
+                        Ok(WorkerState::Shutdown) | Ok(WorkerState::Disconnected) => {
+                            drop(self.writer); // drop now in case it blocks
+                            let _ = self.shutdown.recv();
+                            return;
+                        }
+                        Err(_) => {
+                            // TODO: Expose a metric for IO Errors, or print to stderr
+                        }
+>>>>>>> origin/master
                     }
                 }
+<<<<<<< HEAD
                 if let Err(e) = self.writer.flush() {
                     eprintln!("Failed to flush. Error: {}", e);
                 }
             })
             .expect("failed to spawn `tracing-appender` non-blocking worker thread")
+||||||| 386969ba
+            }
+            if let Err(e) = self.writer.flush() {
+                eprintln!("Failed to flush. Error: {}", e);
+            }
+        })
+=======
+            })
+            .expect("failed to spawn `tracing-appender` non-blocking worker thread")
+>>>>>>> origin/master
     }
 }

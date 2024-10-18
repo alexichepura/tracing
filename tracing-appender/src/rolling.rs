@@ -1,6 +1,12 @@
 //! A rolling file appender.
 //!
+<<<<<<< HEAD
 //! Creates a new log file at a fixed frequency as defined by [`Rotation`][self::Rotation].
+||||||| 386969ba
+//! Creates a new log file at a fixed frequency as defined by [`Rotation`](struct.Rotation.html).
+=======
+//! Creates a new log file at a fixed frequency as defined by [`Rotation`].
+>>>>>>> origin/master
 //! Logs will be written to this file for the duration of the period and will automatically roll over
 //! to the newly created log file once the time period has elapsed.
 //!
@@ -10,12 +16,20 @@
 //! The following helpers are available for creating a rolling file appender.
 //!
 //! - [`Rotation::minutely()`][minutely]: A new log file in the format of `some_directory/log_file_name_prefix.yyyy-MM-dd-HH-mm`
-//! will be created minutely (once per minute)
+//!   will be created minutely (once per minute)
 //! - [`Rotation::hourly()`][hourly]: A new log file in the format of `some_directory/log_file_name_prefix.yyyy-MM-dd-HH`
-//! will be created hourly
+//!   will be created hourly
 //! - [`Rotation::daily()`][daily]: A new log file in the format of `some_directory/log_file_name_prefix.yyyy-MM-dd`
+<<<<<<< HEAD
 //! will be created daily
 //! - [`Rotation::never()`][never()]: This will result in log file located at `some_directory/log_file_name`
+||||||| 386969ba
+//! will be created daily
+//! - [`Rotation::never()`][never]: This will result in log file located at `some_directory/log_file_name`
+=======
+//!   will be created daily
+//! - [`Rotation::never()`][never()]: This will result in log file located at `some_directory/log_file_name`
+>>>>>>> origin/master
 //!
 //!
 //! # Examples
@@ -116,7 +130,13 @@ impl RollingFileAppender {
     /// Creates a new `RollingFileAppender`.
     ///
     /// A `RollingFileAppender` will have a fixed rotation whose frequency is
+<<<<<<< HEAD
     /// defined by [`Rotation`][self::Rotation]. The `directory` and
+||||||| 386969ba
+    /// defined by [`Rotation`](struct.Rotation.html). The `directory` and
+=======
+    /// defined by [`Rotation`]. The `directory` and
+>>>>>>> origin/master
     /// `file_name_prefix` arguments determine the location and file name's _prefix_
     /// of the log file. `RollingFileAppender` will automatically append the current date
     /// and hour (UTC format) to the file name.
@@ -282,9 +302,9 @@ impl fmt::Debug for RollingFileAppender {
 ///     let appender = tracing_appender::rolling::minutely("/some/path", "rolling.log");
 ///     let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
 ///
-///     let subscriber = tracing_subscriber::fmt().with_writer(non_blocking_appender);
+///     let collector = tracing_subscriber::fmt().with_writer(non_blocking_appender);
 ///
-///     tracing::subscriber::with_default(subscriber.finish(), || {
+///     tracing::collect::with_default(collector.finish(), || {
 ///         tracing::event!(tracing::Level::INFO, "Hello");
 ///     });
 /// # }
@@ -317,9 +337,9 @@ pub fn minutely(
 ///     let appender = tracing_appender::rolling::hourly("/some/path", "rolling.log");
 ///     let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
 ///
-///     let subscriber = tracing_subscriber::fmt().with_writer(non_blocking_appender);
+///     let collector = tracing_subscriber::fmt().with_writer(non_blocking_appender);
 ///
-///     tracing::subscriber::with_default(subscriber.finish(), || {
+///     tracing::collect::with_default(collector.finish(), || {
 ///         tracing::event!(tracing::Level::INFO, "Hello");
 ///     });
 /// # }
@@ -340,7 +360,13 @@ pub fn hourly(
 /// a non-blocking, daily file appender.
 ///
 /// A `RollingFileAppender` has a fixed rotation whose frequency is
+<<<<<<< HEAD
 /// defined by [`Rotation`][self::Rotation]. The `directory` and
+||||||| 386969ba
+/// defined by [`Rotation`](struct.Rotation.html). The `directory` and
+=======
+/// defined by [`Rotation`]. The `directory` and
+>>>>>>> origin/master
 /// `file_name_prefix` arguments determine the location and file name's _prefix_
 /// of the log file. `RollingFileAppender` automatically appends the current date in UTC.
 ///
@@ -353,9 +379,9 @@ pub fn hourly(
 ///     let appender = tracing_appender::rolling::daily("/some/path", "rolling.log");
 ///     let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
 ///
-///     let subscriber = tracing_subscriber::fmt().with_writer(non_blocking_appender);
+///     let collector = tracing_subscriber::fmt().with_writer(non_blocking_appender);
 ///
-///     tracing::subscriber::with_default(subscriber.finish(), || {
+///     tracing::collect::with_default(collector.finish(), || {
 ///         tracing::event!(tracing::Level::INFO, "Hello");
 ///     });
 /// # }
@@ -387,9 +413,9 @@ pub fn daily(
 ///     let appender = tracing_appender::rolling::never("/some/path", "non-rolling.log");
 ///     let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
 ///
-///     let subscriber = tracing_subscriber::fmt().with_writer(non_blocking_appender);
+///     let collector = tracing_subscriber::fmt().with_writer(non_blocking_appender);
 ///
-///     tracing::subscriber::with_default(subscriber.finish(), || {
+///     tracing::collect::with_default(collector.finish(), || {
 ///         tracing::event!(tracing::Level::INFO, "Hello");
 ///     });
 /// # }
@@ -567,6 +593,7 @@ impl Inner {
             (_, None, None) => date,
         }
     }
+<<<<<<< HEAD
 
     fn prune_old_logs(&self, max_files: usize) {
         let files = fs::read_dir(&self.log_directory).map(|dir| {
@@ -702,6 +729,144 @@ fn create_writer(directory: &Path, filename: &str) -> Result<File, InitError> {
     }
 
     new_file.map_err(InitError::ctx("failed to create initial log file"))
+||||||| 386969ba
+=======
+
+    fn prune_old_logs(&self, max_files: usize) {
+        let files = fs::read_dir(&self.log_directory).map(|dir| {
+            dir.filter_map(|entry| {
+                let entry = entry.ok()?;
+                let metadata = entry.metadata().ok()?;
+
+                // the appender only creates files, not directories or symlinks,
+                // so we should never delete a dir or symlink.
+                if !metadata.is_file() {
+                    return None;
+                }
+
+                let filename = entry.file_name();
+                // if the filename is not a UTF-8 string, skip it.
+                let filename = filename.to_str()?;
+                if let Some(prefix) = &self.log_filename_prefix {
+                    if !filename.starts_with(prefix) {
+                        return None;
+                    }
+                }
+
+                if let Some(suffix) = &self.log_filename_suffix {
+                    if !filename.ends_with(suffix) {
+                        return None;
+                    }
+                }
+
+                if self.log_filename_prefix.is_none()
+                    && self.log_filename_suffix.is_none()
+                    && Date::parse(filename, &self.date_format).is_err()
+                {
+                    return None;
+                }
+
+                let created = metadata.created().ok()?;
+                Some((entry, created))
+            })
+            .collect::<Vec<_>>()
+        });
+
+        let mut files = match files {
+            Ok(files) => files,
+            Err(error) => {
+                eprintln!("Error reading the log directory/files: {}", error);
+                return;
+            }
+        };
+        if files.len() < max_files {
+            return;
+        }
+
+        // sort the files by their creation timestamps.
+        files.sort_by_key(|(_, created_at)| *created_at);
+
+        // delete files, so that (n-1) files remain, because we will create another log file
+        for (file, _) in files.iter().take(files.len() - (max_files - 1)) {
+            if let Err(error) = fs::remove_file(file.path()) {
+                eprintln!(
+                    "Failed to remove old log file {}: {}",
+                    file.path().display(),
+                    error
+                );
+            }
+        }
+    }
+
+    fn refresh_writer(&self, now: OffsetDateTime, file: &mut File) {
+        let filename = self.join_date(&now);
+
+        if let Some(max_files) = self.max_files {
+            self.prune_old_logs(max_files);
+        }
+
+        match create_writer(&self.log_directory, &filename) {
+            Ok(new_file) => {
+                if let Err(err) = file.flush() {
+                    eprintln!("Couldn't flush previous writer: {}", err);
+                }
+                *file = new_file;
+            }
+            Err(err) => eprintln!("Couldn't create writer for logs: {}", err),
+        }
+    }
+
+    /// Checks whether or not it's time to roll over the log file.
+    ///
+    /// Rather than returning a `bool`, this returns the current value of
+    /// `next_date` so that we can perform a `compare_exchange` operation with
+    /// that value when setting the next rollover time.
+    ///
+    /// If this method returns `Some`, we should roll to a new log file.
+    /// Otherwise, if this returns we should not rotate the log file.
+    fn should_rollover(&self, date: OffsetDateTime) -> Option<usize> {
+        let next_date = self.next_date.load(Ordering::Acquire);
+        // if the next date is 0, this appender *never* rotates log files.
+        if next_date == 0 {
+            return None;
+        }
+
+        if date.unix_timestamp() as usize >= next_date {
+            return Some(next_date);
+        }
+
+        None
+    }
+
+    fn advance_date(&self, now: OffsetDateTime, current: usize) -> bool {
+        let next_date = self
+            .rotation
+            .next_date(&now)
+            .map(|date| date.unix_timestamp() as usize)
+            .unwrap_or(0);
+        self.next_date
+            .compare_exchange(current, next_date, Ordering::AcqRel, Ordering::Acquire)
+            .is_ok()
+    }
+}
+
+fn create_writer(directory: &Path, filename: &str) -> Result<File, InitError> {
+    let path = directory.join(filename);
+    let mut open_options = OpenOptions::new();
+    open_options.append(true).create(true);
+
+    let new_file = open_options.open(path.as_path());
+    if new_file.is_err() {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(InitError::ctx("failed to create log directory"))?;
+            return open_options
+                .open(path)
+                .map_err(InitError::ctx("failed to create initial log file"));
+        }
+    }
+
+    new_file.map_err(InitError::ctx("failed to create initial log file"))
+>>>>>>> origin/master
 }
 
 #[cfg(test)]

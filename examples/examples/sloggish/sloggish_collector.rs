@@ -1,3 +1,4 @@
+<<<<<<< HEAD:examples/examples/sloggish/sloggish_subscriber.rs
 //! A simple example demonstrating how one might implement a custom
 //! subscriber.
 //!
@@ -11,10 +12,30 @@
 //! [`slog-term`]: https://docs.rs/slog-term/2.4.0/slog_term/
 //! [`slog` README]: https://github.com/slog-rs/slog#terminal-output-example
 use nu_ansi_term::{Color, Style};
+||||||| 386969ba:examples/examples/sloggish/sloggish_subscriber.rs
+//! A simple example demonstrating how one might implement a custom
+//! subscriber.
+//!
+//! This subscriber implements a tree-structured logger similar to
+//! the "compact" formatter in [`slog-term`]. The demo mimics the
+//! example output in the screenshot in the [`slog` README].
+//!
+//! Note that this logger isn't ready for actual production use.
+//! Several corners were cut to make the example simple.
+//!
+//! [`slog-term`]: https://docs.rs/slog-term/2.4.0/slog_term/
+//! [`slog` README]: https://github.com/slog-rs/slog#terminal-output-example
+use ansi_term::{Color, Style};
+=======
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
+use nu_ansi_term::{Color, Style};
+>>>>>>> origin/master:examples/examples/sloggish/sloggish_collector.rs
 use tracing::{
     field::{Field, Visit},
-    Id, Level, Subscriber,
+    Collect, Id, Level, Metadata,
 };
+use tracing_core::span::Current;
 
 use std::{
     cell::RefCell,
@@ -38,7 +59,7 @@ pub struct CurrentSpanPerThread {
 impl CurrentSpanPerThread {
     pub fn new() -> Self {
         thread_local! {
-            static CURRENT: RefCell<Vec<Id>> = RefCell::new(vec![]);
+            static CURRENT: RefCell<Vec<Id>> = const { RefCell::new(Vec::new()) };
         };
         Self { current: &CURRENT }
     }
@@ -63,7 +84,7 @@ impl CurrentSpanPerThread {
     }
 }
 
-pub struct SloggishSubscriber {
+pub struct SloggishCollector {
     // TODO: this can probably be unified with the "stack" that's used for
     // printing?
     current: CurrentSpanPerThread,
@@ -77,6 +98,7 @@ pub struct SloggishSubscriber {
 struct Span {
     parent: Option<Id>,
     kvs: Vec<(&'static str, String)>,
+    metadata: &'static Metadata<'static>,
 }
 
 struct Event<'a> {
@@ -104,6 +126,7 @@ impl Span {
         let mut span = Self {
             parent,
             kvs: Vec::new(),
+            metadata: attrs.metadata(),
         };
         attrs.record(&mut span);
         span
@@ -146,7 +169,7 @@ impl<'a> Visit for Event<'a> {
     }
 }
 
-impl SloggishSubscriber {
+impl SloggishCollector {
     pub fn new(indent_amount: usize) -> Self {
         Self {
             current: CurrentSpanPerThread::new(),
@@ -193,7 +216,7 @@ impl SloggishSubscriber {
     }
 }
 
-impl Subscriber for SloggishSubscriber {
+impl Collect for SloggishCollector {
     fn enabled(&self, _metadata: &tracing::Metadata<'_>) -> bool {
         true
     }
@@ -239,6 +262,7 @@ impl Subscriber for SloggishSubscriber {
             self.print_indent(&mut stderr, indent).unwrap();
             stack.push(span_id.clone());
             if let Some(data) = data {
+                #[allow(clippy::map_identity)] // TODO remove in Rust 1.77
                 self.print_kvs(&mut stderr, data.kvs.iter().map(|(k, v)| (k, v)), "")
                     .unwrap();
             }
@@ -275,5 +299,19 @@ impl Subscriber for SloggishSubscriber {
     fn try_close(&self, _id: tracing::Id) -> bool {
         // TODO: GC unneeded spans.
         false
+    }
+
+    fn current_span(&self) -> Current {
+        if let Some(id) = self.current.id() {
+            let metadata = self
+                .spans
+                .lock()
+                .unwrap()
+                .get(&id)
+                .unwrap_or_else(|| panic!("no metadata stored for span with ID {:?}", id))
+                .metadata;
+            return Current::new(id, metadata);
+        }
+        Current::none()
     }
 }

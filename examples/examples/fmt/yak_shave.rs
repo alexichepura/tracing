@@ -1,11 +1,24 @@
+<<<<<<< HEAD
 use snafu::{ResultExt, Snafu};
 use std::error::Error;
 use thiserror::Error;
 use tracing::{debug, error, info, span, trace, warn, Level};
+||||||| 386969ba
+use std::{error::Error, io};
+use tracing::{debug, error, info, span, warn, Level};
+=======
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
+//!
+use snafu::{ResultExt, Snafu};
+use std::error::Error;
+use thiserror::Error;
+use tracing::{debug, error, info, span, trace, warn, Level};
+>>>>>>> origin/master
 
 // the `#[tracing::instrument]` attribute creates and enters a span
-// every time the instrumented function is called. The span is named after the
-// the function or method. Paramaters passed to the function are recorded as fields.
+// every time the instrumented function is called. The span is named after
+// the function or method. Parameters passed to the function are recorded as fields.
 #[tracing::instrument]
 pub fn shave(yak: usize) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     // this creates an event at the TRACE log level with two fields:
@@ -47,8 +60,16 @@ pub fn shave_all(yaks: usize) -> usize {
 
         if let Err(ref error) = res {
             // Like spans, events can also use the field initialization shorthand.
+<<<<<<< HEAD
             // In this instance, `yak` is the field being initalized.
             error!(yak, error = error.as_ref(), "failed to shave yak");
+||||||| 386969ba
+            // In this instance, `yak` is the field being initalized.
+            error!(yak, error = error.as_ref(), "failed to shave yak!");
+=======
+            // In this instance, `yak` is the field being initialized.
+            error!(yak, error = error.as_ref(), "failed to shave yak");
+>>>>>>> origin/master
         } else {
             yaks_shaved += 1;
         }

@@ -68,22 +68,32 @@ impl<'a> ExtensionsMut<'a> {
     /// Insert a type into this `Extensions`.
     ///
     /// Note that extensions are _not_
-    /// `Layer`-specific—they are _span_-specific. This means that
-    /// other layers can access and mutate extensions that
-    /// a different Layer recorded. For example, an application might
-    /// have a layer that records execution timings, alongside a layer
+    /// [subscriber]-specific—they are _span_-specific. This means that
+    /// other subscribers can access and mutate extensions that
+    /// a different Subscriber recorded. For example, an application might
+    /// have a subscriber that records execution timings, alongside a subscriber
     /// that reports spans and events to a distributed
     /// tracing system that requires timestamps for spans.
-    /// Ideally, if one layer records a timestamp _x_, the other layer
+    /// Ideally, if one subscriber records a timestamp _x_, the other subscriber
     /// should be able to reuse timestamp _x_.
     ///
     /// Therefore, extensions should generally be newtypes, rather than common
+<<<<<<< HEAD
     /// types like [`String`](std::string::String), to avoid accidental
     /// cross-`Layer` clobbering.
+||||||| 386969ba
+    /// types like [`String`](https://doc.rust-lang.org/std/string/struct.String.html), to avoid accidental
+    /// cross-`Layer` clobbering.
+=======
+    /// types like [`String`](std::string::String), to avoid accidental
+    /// cross-`Subscriber` clobbering.
+>>>>>>> origin/master
     ///
     /// ## Panics
     ///
     /// If `T` is already present in `Extensions`, then this method will panic.
+    ///
+    /// [subscriber]: crate::subscribe::Subscribe
     pub fn insert<T: Send + Sync + 'static>(&mut self, val: T) {
         assert!(self.replace(val).is_none())
     }
@@ -110,8 +120,16 @@ impl<'a> ExtensionsMut<'a> {
 
 /// A type map of span extensions.
 ///
+<<<<<<< HEAD
 /// [ExtensionsInner] is used by `SpanData` to store and
 /// span-specific data. A given `Layer` can read and write
+||||||| 386969ba
+/// [ExtensionsInner] is used by [Data] to store and
+/// span-specific data. A given [Layer] can read and write
+=======
+/// [ExtensionsInner] is used by [Data] to store and
+/// span-specific data. A given [Subscriber] can read and write
+>>>>>>> origin/master
 /// data that it is interested in recording and emitting.
 #[derive(Default)]
 pub(crate) struct ExtensionsInner {
@@ -139,7 +157,7 @@ impl ExtensionsInner {
             .and_then(|boxed| {
                 #[allow(warnings)]
                 {
-                    (boxed as Box<Any + 'static>)
+                    (boxed as Box<dyn Any + 'static>)
                         .downcast()
                         .ok()
                         .map(|boxed| *boxed)
@@ -165,6 +183,7 @@ impl ExtensionsInner {
     ///
     /// If a extension of this type existed, it will be returned.
     pub(crate) fn remove<T: Send + Sync + 'static>(&mut self) -> Option<T> {
+<<<<<<< HEAD
         self.map.remove(&TypeId::of::<T>()).and_then(|boxed| {
             #[allow(warnings)]
             {
@@ -184,6 +203,40 @@ impl ExtensionsInner {
     #[cfg(any(test, feature = "registry"))]
     pub(crate) fn clear(&mut self) {
         self.map.clear();
+||||||| 386969ba
+        self.map
+            .as_mut()
+            .and_then(|map| map.remove(&TypeId::of::<T>()))
+            .and_then(|boxed| {
+                #[allow(warnings)]
+                {
+                    (boxed as Box<Any + 'static>)
+                        .downcast()
+                        .ok()
+                        .map(|boxed| *boxed)
+                }
+            })
+=======
+        self.map.remove(&TypeId::of::<T>()).and_then(|boxed| {
+            #[allow(warnings)]
+            {
+                (boxed as Box<dyn Any + 'static>)
+                    .downcast()
+                    .ok()
+                    .map(|boxed| *boxed)
+            }
+        })
+    }
+
+    /// Clear the `ExtensionsInner` in-place, dropping any elements in the map but
+    /// retaining allocated capacity.
+    ///
+    /// This permits the hash map allocation to be pooled by the registry so
+    /// that future spans will not need to allocate new hashmaps.
+    #[cfg(any(test, feature = "registry"))]
+    pub(crate) fn clear(&mut self) {
+        self.map.clear();
+>>>>>>> origin/master
     }
 }
 

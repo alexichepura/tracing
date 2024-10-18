@@ -6,7 +6,7 @@
 //! [![Documentation (master)][docs-master-badge]][docs-master-url]
 //!
 //! [docs-badge]: https://docs.rs/tracing-serde/badge.svg
-//! [docs-url]: https://docs.rs/tracing-serde
+//! [docs-url]: crate
 //! [docs-master-badge]: https://img.shields.io/badge/docs-master-blue
 //! [docs-master-url]: https://tracing-rs.netlify.com/tracing_serde
 //!
@@ -20,7 +20,7 @@
 //! `tracing` gives us machine-readable structured diagnostic
 //! information. This lets us interact with diagnostic data
 //! programmatically. With `tracing-serde`, you can implement a
-//! `Subscriber` to serialize your `tracing` types and make use of the
+//! `Collector` to serialize your `tracing` types and make use of the
 //! existing ecosystem of `serde` serializers to talk with distributed
 //! tracing systems.
 //!
@@ -61,21 +61,27 @@
 //!
 //! For the full example, please see the [examples](../examples) folder.
 //!
-//! Implement a `Subscriber` to format the serialization of `tracing`
+//! Implement a `Collector` to format the serialization of `tracing`
 //! types how you'd like.
 //!
 //! ```rust
-//! # use tracing_core::{Subscriber, Metadata, Event};
-//! # use tracing_core::span::{Attributes, Id, Record};
+//! # use tracing_core::{Collect, Metadata, Event};
+//! # use tracing_core::span::{Attributes, Current, Id, Record};
 //! # use std::sync::atomic::{AtomicUsize, Ordering};
 //! use tracing_serde::AsSerde;
 //! use serde_json::json;
 //!
-//! pub struct JsonSubscriber {
+//! pub struct JsonCollector {
 //!     next_id: AtomicUsize, // you need to assign span IDs, so you need a counter
 //! }
 //!
-//! impl Subscriber for JsonSubscriber {
+//! impl JsonCollector {
+//!     fn new() -> Self {
+//!         Self { next_id: 1.into() }
+//!     }
+//! }
+//!
+//! impl Collect for JsonCollector {
 //!
 //!     fn new_span(&self, attrs: &Attributes<'_>) -> Id {
 //!         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
@@ -97,18 +103,20 @@
 //!     }
 //!
 //!     // ...
-//!     # fn enabled(&self, _: &Metadata<'_>) -> bool { false }
+//!     # fn enabled(&self, _: &Metadata<'_>) -> bool { true }
 //!     # fn enter(&self, _: &Id) {}
 //!     # fn exit(&self, _: &Id) {}
 //!     # fn record(&self, _: &Id, _: &Record<'_>) {}
 //!     # fn record_follows_from(&self, _: &Id, _: &Id) {}
+//!     # fn current_span(&self) -> Current { Current::unknown() }
 //! }
 //! ```
 //!
-//! After you implement your `Subscriber`, you can use your `tracing`
-//! subscriber (`JsonSubscriber` in the above example) to record serialized
+//! After you implement your `Collector`, you can use your `tracing`
+//! collector (`JsonCollector` in the above example) to record serialized
 //! trace data.
 //!
+<<<<<<< HEAD
 //! ### Unstable Features
 //!
 //! These feature flags enable **unstable** features. The public API may break in 0.1.x
@@ -139,6 +147,24 @@
 //! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
 //! [`valuable`]: https://crates.io/crates/valuable
 //!
+||||||| 386969ba
+=======
+//! ##  Crate Feature Flags
+//!
+//! The following crate feature flags are available:
+//!
+//! * `std`: Depend on the Rust standard library (enabled by default).
+//!
+//!   `no_std` users may disable this feature with `default-features = false`:
+//!
+//!   ```toml
+//!   [dependencies]
+//!   tracing-serde = { version = "0.2", default-features = false }
+//!   ```
+//
+//!   **Note**:`tracing-serde`'s `no_std` support requires `liballoc`.
+//!
+>>>>>>> origin/master
 //! ## Supported Rust Versions
 //!
 //! Tracing is built against the latest stable release. The minimum supported
@@ -157,10 +183,16 @@
 //! [`serde`]: https://crates.io/crates/serde
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png",
+    html_favicon_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/favicon.ico",
     issue_tracker_base_url = "https://github.com/tokio-rs/tracing/issues/"
 )]
+<<<<<<< HEAD
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(docsrs, deny(rustdoc::broken_intra_doc_links))]
+||||||| 386969ba
+#![cfg_attr(docsrs, deny(broken_intra_doc_links))]
+=======
+>>>>>>> origin/master
 #![warn(
     missing_debug_implementations,
     // missing_docs, // TODO: add documentation
@@ -183,7 +215,10 @@
     unused_parens,
     while_true
 )]
-use std::fmt;
+// Support using tracing-serde without the standard library!
+#![cfg_attr(not(feature = "std"), no_std)]
+
+use core::fmt;
 
 use serde::{
     ser::{SerializeMap, SerializeSeq, SerializeStruct, SerializeTupleStruct, Serializer},
@@ -200,9 +235,9 @@ use tracing_core::{
 pub mod fields;
 
 #[derive(Debug)]
-pub struct SerializeField(Field);
+pub struct SerializeField<'a>(&'a Field);
 
-impl Serialize for SerializeField {
+impl<'a> Serialize for SerializeField<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -221,7 +256,7 @@ impl<'a> Serialize for SerializeFieldSet<'a> {
     {
         let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
         for element in self.0 {
-            seq.serialize_element(element.name())?;
+            seq.serialize_element(&SerializeField(&element))?;
         }
         seq.end()
     }
@@ -564,6 +599,7 @@ impl<'a> AsSerde<'a> for Level {
     }
 }
 
+<<<<<<< HEAD
 impl<'a> AsSerde<'a> for FieldSet {
     type Serializable = SerializeFieldSet<'a>;
 
@@ -572,6 +608,25 @@ impl<'a> AsSerde<'a> for FieldSet {
     }
 }
 
+||||||| 386969ba
+=======
+impl<'a> AsSerde<'a> for Field {
+    type Serializable = SerializeField<'a>;
+
+    fn as_serde(&'a self) -> Self::Serializable {
+        SerializeField(self)
+    }
+}
+
+impl<'a> AsSerde<'a> for FieldSet {
+    type Serializable = SerializeFieldSet<'a>;
+
+    fn as_serde(&'a self) -> Self::Serializable {
+        SerializeFieldSet(self)
+    }
+}
+
+>>>>>>> origin/master
 impl<'a> self::sealed::Sealed for Event<'a> {}
 
 impl<'a> self::sealed::Sealed for Attributes<'a> {}
@@ -584,8 +639,16 @@ impl<'a> self::sealed::Sealed for Record<'a> {}
 
 impl<'a> self::sealed::Sealed for Metadata<'a> {}
 
+<<<<<<< HEAD
 impl self::sealed::Sealed for FieldSet {}
 
+||||||| 386969ba
+=======
+impl self::sealed::Sealed for Field {}
+
+impl self::sealed::Sealed for FieldSet {}
+
+>>>>>>> origin/master
 mod sealed {
     pub trait Sealed {}
 }

@@ -25,7 +25,7 @@
 //! # Core Concepts
 //!
 //! The core of `tracing`'s API is composed of _spans_, _events_ and
-//! _subscribers_. We'll cover these in turn.
+//! _collectors_. We'll cover these in turn.
 //!
 //! ## Spans
 //!
@@ -49,7 +49,7 @@
 //! # }
 //!```
 //!
-//! The [`span` module][span]'s documentation provides further details on how to
+//! The [`span` module][mod@span]'s documentation provides further details on how to
 //! use spans.
 //!
 //! <div class="example-wrap" style="display:inline-block"><pre class="compile_fail" style="white-space:normal;font:inherit;">
@@ -91,23 +91,23 @@
 //! The [`Event` struct][`Event`] documentation provides further details on using
 //! events.
 //!
-//! ## Subscribers
+//! ## Collectors
 //!
 //! As `Span`s and `Event`s occur, they are recorded or aggregated by
-//! implementations of the [`Subscriber`] trait. `Subscriber`s are notified
+//! implementations of the [`Collect`] trait. Collectors are notified
 //! when an `Event` takes place and when a `Span` is entered or exited. These
-//! notifications are represented by the following `Subscriber` trait methods:
+//! notifications are represented by the following `Collect` trait methods:
 //!
-//! + [`event`][Subscriber::event], called when an `Event` takes place,
+//! + [`event`][Collect::event], called when an `Event` takes place,
 //! + [`enter`], called when execution enters a `Span`,
 //! + [`exit`], called when execution exits a `Span`
 //!
-//! In addition, subscribers may implement the [`enabled`] function to _filter_
+//! In addition, collectors may implement the [`enabled`] function to _filter_
 //! the notifications they receive based on [metadata] describing each `Span`
-//! or `Event`. If a call to `Subscriber::enabled` returns `false` for a given
-//! set of metadata, that `Subscriber` will *not* be notified about the
+//! or `Event`. If a call to `Collect::enabled` returns `false` for a given
+//! set of metadata, that collector will *not* be notified about the
 //! corresponding `Span` or `Event`. For performance reasons, if no currently
-//! active subscribers express interest in a given set of metadata by returning
+//! active collectors express interest in a given set of metadata by returning
 //! `true`, then the corresponding `Span` or `Event` will never be constructed.
 //!
 //! # Usage
@@ -170,6 +170,7 @@
 //! # fn main() {}
 //! ```
 //!
+<<<<<<< HEAD
 //! For functions which don't have built-in tracing support and can't have
 //! the `#[instrument]` attribute applied (such as from an external crate),
 //! the [`Span` struct][`Span`] has a [`in_scope()` method][`in_scope`]
@@ -189,6 +190,28 @@
 //! # Ok(())
 //! # }
 //! ```
+||||||| 386969ba
+=======
+//! For functions which don't have built-in tracing support and can't have
+//! the `#[instrument]` attribute applied (such as from an external crate),
+//! the [`Span` struct][`Span`] has a [`in_scope()` method][`in_scope`]
+//! which can be used to easily wrap synchronous code in a span.
+//!
+//! For example:
+//! ```rust
+//! use tracing::info_span;
+//!
+//! # fn doc() -> Result<(), ()> {
+//! # mod serde_json {
+//! #    pub(crate) fn from_slice(buf: &[u8]) -> Result<(), ()> { Ok(()) }
+//! # }
+//! # let buf: [u8; 0] = [];
+//! let json = info_span!("json.parse").in_scope(|| serde_json::from_slice(&buf))?;
+//! # let _ = json; // suppress unused variable warning
+//! # Ok(())
+//! # }
+//! ```
+>>>>>>> origin/master
 //!
 //! You can find more examples showing how to use this crate [here][examples].
 //!
@@ -217,7 +240,7 @@
 //! event. Optionally, the, [target] and [parent span] may be overridden. If the
 //! target and parent span are not overridden, they will default to the
 //! module path where the macro was invoked and the current span (as determined
-//! by the subscriber), respectively.
+//! by the collector), respectively.
 //!
 //! For example:
 //!
@@ -438,6 +461,7 @@
 //! Specifying a formatted message in this manner does not allocate by default.
 //!
 //! [struct initializers]: https://doc.rust-lang.org/book/ch05-01-defining-structs.html#using-the-field-init-shorthand-when-variables-and-fields-have-the-same-name
+<<<<<<< HEAD
 //! [target]: Metadata::target
 //! [parent span]: span::Attributes::parent
 //! [determined contextually]: span::Attributes::is_contextual
@@ -445,6 +469,23 @@
 //! [`fmt::Display`]: std::fmt::Display
 //! [fmt]: std::fmt#usage
 //! [`Empty`]: field::Empty
+||||||| 386969ba
+//! [target]: struct.Metadata.html#method.target
+//! [parent span]: span/struct.Attributes.html#method.parent
+//! [determined contextually]: span/struct.Attributes.html#method.is_contextual
+//! [`fmt::Debug`]: https://doc.rust-lang.org/std/fmt/trait.Debug.html
+//! [`fmt::Display`]: https://doc.rust-lang.org/std/fmt/trait.Display.html
+//! [fmt]: https://doc.rust-lang.org/std/fmt/#usage
+//! [`Empty`]: field/struct.Empty.html
+=======
+//! [target]: Metadata::target()
+//! [parent span]: span::Attributes::parent()
+//! [determined contextually]: span::Attributes::is_contextual()
+//! [`fmt::Debug`]: std::fmt::Debug
+//! [`fmt::Display`]: std::fmt::Display
+//! [fmt]: std::fmt#usage
+//! [`Empty`]: field::Empty
+>>>>>>> origin/master
 //!
 //! ### Shorthand Macros
 //!
@@ -486,7 +527,7 @@
 //! use tracing::{debug, error, info, span, warn, Level};
 //!
 //! // the `#[tracing::instrument]` attribute creates and enters a span
-//! // every time the instrumented function is called. The span is named after the
+//! // every time the instrumented function is called. The span is named after
 //! // the function or method. Parameters passed to the function are recorded as fields.
 //! #[tracing::instrument]
 //! pub fn shave(yak: usize) -> Result<(), Box<dyn Error + 'static>> {
@@ -527,7 +568,7 @@
 //!
 //!         if let Err(ref error) = res {
 //!             // Like spans, events can also use the field initialization shorthand.
-//!             // In this instance, `yak` is the field being initalized.
+//!             // In this instance, `yak` is the field being initialized.
 //!             error!(yak, error = error.as_ref(), "failed to shave yak!");
 //!         } else {
 //!             yaks_shaved += 1;
@@ -547,21 +588,21 @@
 //!
 //! ## In executables
 //!
-//! In order to record trace events, executables have to use a `Subscriber`
-//! implementation compatible with `tracing`. A `Subscriber` implements a
+//! In order to record trace events, executables have to use a collector
+//! implementation compatible with `tracing`. A collector implements a
 //! way of collecting trace data, such as by logging it to standard output.
 //!
-//! This library does not contain any `Subscriber` implementations; these are
+//! This library does not contain any `Collect` implementations; these are
 //! provided by [other crates](#related-crates).
 //!
-//! The simplest way to use a subscriber is to call the [`set_global_default`]
+//! The simplest way to use a collector is to call the [`set_global_default`]
 //! function:
 //!
 //! ```
-//! extern crate tracing;
-//! # pub struct FooSubscriber;
+//! # pub struct FooCollector;
 //! # use tracing::{span::{Id, Attributes, Record}, Metadata};
-//! # impl tracing::Subscriber for FooSubscriber {
+//! # use tracing_core::span::Current;
+//! # impl tracing::Collect for FooCollector {
 //! #   fn new_span(&self, _: &Attributes) -> Id { Id::from_u64(0) }
 //! #   fn record(&self, _: &Id, _: &Record) {}
 //! #   fn event(&self, _: &tracing::Event) {}
@@ -569,37 +610,58 @@
 //! #   fn enabled(&self, _: &Metadata) -> bool { false }
 //! #   fn enter(&self, _: &Id) {}
 //! #   fn exit(&self, _: &Id) {}
+//! #   fn current_span(&self) -> Current { Current::unknown() }
 //! # }
-//! # impl FooSubscriber {
-//! #   fn new() -> Self { FooSubscriber }
+//! # impl FooCollector {
+//! #   fn new() -> Self { FooCollector }
 //! # }
 //! # fn main() {
 //!
-//! let my_subscriber = FooSubscriber::new();
-//! tracing::subscriber::set_global_default(my_subscriber)
+//! # #[cfg(feature = "alloc")]
+//! let my_collector = FooCollector::new();
+//! # #[cfg(feature = "alloc")]
+//! tracing::collect::set_global_default(my_collector)
 //!     .expect("setting tracing default failed");
 //! # }
 //! ```
 //!
+<<<<<<< HEAD
 //! <pre class="compile_fail" style="white-space:normal;font:inherit;">
 //!     <strong>Warning</strong>: In general, libraries should <em>not</em> call
 //!     <code>set_global_default()</code>! Doing so will cause conflicts when
 //!     executables that depend on the library try to set the default later.
 //! </pre>
+||||||| 386969ba
+//! <div class="information">
+//!     <div class="tooltip compile_fail" style="">&#x26a0; &#xfe0f;<span class="tooltiptext">Warning</span></div>
+//! </div><div class="example-wrap" style="display:inline-block"><pre class="compile_fail" style="white-space:normal;font:inherit;">
+//! <strong>Warning</strong>: In general, libraries should <em>not</em> call
+//! <code>set_global_default()</code>! Doing so will cause conflicts when
+//! executables that depend on the library try to set the default later.
+//! </pre></div>
+=======
+//! <div class="information">
+//! </div><div class="example-wrap" style="display:inline-block"><pre class="compile_fail" style="white-space:normal;font:inherit;">
+//! <strong>Warning</strong>: In general, libraries should <em>not</em> call
+//! <code>set_global_default()</code>! Doing so will cause conflicts when
+//! executables that depend on the library try to set the default later.
+//! </pre></div>
+>>>>>>> origin/master
 //!
-//! This subscriber will be used as the default in all threads for the
+//! This collector will be used as the default in all threads for the
 //! remainder of the duration of the program, similar to setting the logger
 //! in the `log` crate.
 //!
-//! In addition, the default subscriber can be set through using the
+//! In addition, the default collector can be set through using the
 //! [`with_default`] function. This follows the `tokio` pattern of using
 //! closures to represent executing code in a context that is exited at the end
 //! of the closure. For example:
 //!
 //! ```rust
-//! # pub struct FooSubscriber;
+//! # pub struct FooCollector;
 //! # use tracing::{span::{Id, Attributes, Record}, Metadata};
-//! # impl tracing::Subscriber for FooSubscriber {
+//! # use tracing_core::span::Current;
+//! # impl tracing::Collect for FooCollector {
 //! #   fn new_span(&self, _: &Attributes) -> Id { Id::from_u64(0) }
 //! #   fn record(&self, _: &Id, _: &Record) {}
 //! #   fn event(&self, _: &tracing::Event) {}
@@ -607,28 +669,29 @@
 //! #   fn enabled(&self, _: &Metadata) -> bool { false }
 //! #   fn enter(&self, _: &Id) {}
 //! #   fn exit(&self, _: &Id) {}
+//! #   fn current_span(&self) -> Current { Current::unknown() }
 //! # }
-//! # impl FooSubscriber {
-//! #   fn new() -> Self { FooSubscriber }
+//! # impl FooCollector {
+//! #   fn new() -> Self { FooCollector }
 //! # }
 //! # fn main() {
 //!
-//! let my_subscriber = FooSubscriber::new();
+//! let my_collector = FooCollector::new();
 //! # #[cfg(feature = "std")]
-//! tracing::subscriber::with_default(my_subscriber, || {
+//! tracing::collect::with_default(my_collector, || {
 //!     // Any trace events generated in this closure or by functions it calls
-//!     // will be collected by `my_subscriber`.
+//!     // will be collected by `my_collector`.
 //! })
 //! # }
 //! ```
 //!
-//! This approach allows trace data to be collected by multiple subscribers
+//! This approach allows trace data to be collected by multiple collectors
 //! within different contexts in the program. Note that the override only applies to the
 //! currently executing thread; other threads will not see the change from with_default.
 //!
-//! Any trace events generated outside the context of a subscriber will not be collected.
+//! Any trace events generated outside the context of a collector will not be collected.
 //!
-//! Once a subscriber has been set, instrumentation points may be added to the
+//! Once a collector has been set, instrumentation points may be added to the
 //! executable using the `tracing` crate's macros.
 //!
 //! ## `log` Compatibility
@@ -640,13 +703,13 @@
 //! libraries and applications either emit or consume `log` records. Therefore,
 //! `tracing` provides multiple forms of interoperability with `log`: `tracing`
 //! instrumentation can emit `log` records, and a compatibility layer enables
-//! `tracing` [`Subscriber`]s to consume `log` records as `tracing` [`Event`]s.
+//! `tracing` [`Collect`]s to consume `log` records as `tracing` [`Event`]s.
 //!
 //! ### Emitting `log` Records
 //!
 //! This crate provides two feature flags, "log" and "log-always", which will
 //! cause [spans] and [events] to emit `log` records. When the "log" feature is
-//! enabled, if no `tracing` `Subscriber` is active, invoking an event macro or
+//! enabled, if no `tracing` collector is active, invoking an event macro or
 //! creating a span with fields will emit a `log` record. This is intended
 //! primarily for use in libraries which wish to emit diagnostics that can be
 //! consumed by applications using `tracing` *or* `log`, without paying the
@@ -654,7 +717,7 @@
 //! in use.
 //!
 //! Enabling the "log-always" feature will cause `log` records to be emitted
-//! even if a `tracing` `Subscriber` _is_ set. This is intended to be used in
+//! even if a `tracing` collector _is_ set. This is intended to be used in
 //! applications where a `log` `Logger` is being used to record a textual log,
 //! and `tracing` is used only to record other forms of diagnostics (such as
 //! metrics, profiling, or distributed tracing data). Unlike the "log" feature,
@@ -670,7 +733,7 @@
 //! entered, exited, and closed. Since these additional span lifecycle logs have
 //! the potential to be very verbose, and don't include additional fields, they
 //! will always be emitted at the `Trace` level, rather than inheriting the
-//! level of the span that generated them. Furthermore, they are are categorized
+//! level of the span that generated them. Furthermore, they are categorized
 //! under a separate `log` target, "tracing::span" (and its sub-target,
 //! "tracing::span::active", for the logs on entering and exiting a span), which
 //! may be enabled or disabled separately from other `log` records emitted by
@@ -679,7 +742,7 @@
 //! ### Consuming `log` Records
 //!
 //! The [`tracing-log`] crate provides a compatibility layer which
-//! allows a `tracing` [`Subscriber`] to consume `log` records as though they
+//! allows a `tracing` collector to consume `log` records as though they
 //! were `tracing` [events]. This allows applications using `tracing` to record
 //! the logs emitted by dependencies using `log` as events within the context of
 //! the application's trace tree. See [that crate's documentation][log-tracer]
@@ -687,21 +750,75 @@
 //!
 //! [log-tracer]: https://docs.rs/tracing-log/latest/tracing_log/#convert-log-records-to-tracing-events
 //!
+//! ### `no_std` Support
+//!
+//! In embedded systems and other bare-metal applications, `tracing` can be
+//! used without requiring the Rust standard library, although some features are
+//! disabled.
+//!
+//! The dependency on the standard library is controlled by two crate feature
+//! flags, "std", which enables the dependency on [`libstd`], and "alloc", which
+//! enables the dependency on [`liballoc`] (and is enabled by the "std"
+//! feature). These features are enabled by default, but `no_std` users can
+//! disable them using:
+//!
+//! ```toml
+//! # Cargo.toml
+//! tracing = { version = "0.2", default-features = false }
+//! ```
+//!
+//! To enable `liballoc` but not `std`, use:
+//!
+//! ```toml
+//! # Cargo.toml
+//! tracing = { version = "0.2", default-features = false, features = ["alloc"] }
+//! ```
+//!
+//! When both the "std" and "alloc" feature flags are disabled, `tracing-core`
+//! will not make any dynamic memory allocations at runtime, and does not
+//! require a global memory allocator.
+//!
+//! The "alloc" feature is required to enable the [`Dispatch::new`] function,
+//! which requires dynamic memory allocation to construct a collect trait
+//! object at runtime. When liballoc is disabled, new `Dispatch`s may still be
+//! created from `&'static dyn Collector` references, using
+//! [`Dispatch::from_static`].
+//!
+//! The "std" feature is required to enable the following features:
+//!
+//! * Per-thread scoped trace dispatchers ([`Dispatch::set_default`] and
+//!   [`with_default`]. Since setting a thread-local dispatcher inherently
+//!   requires a concept of threads to be available, this API is not possible
+//!   without the standard library.
+//! * Support for [constructing `Value`s from types implementing
+//!   `std::error::Error`][err]. Since the `Error` trait is defined in `std`,
+//!   it's not possible to provide this feature without `std`.
+//!
+//! All other features of `tracing` should behave identically with and
+//! without `std` and `alloc`.
+//!
+//! [`libstd`]: std
+//! [`Dispatch::new`]: crate::dispatch::Dispatch::new
+//! [`Dispatch::from_static`]: crate::dispatch::Dispatch::from_static
+//! [`Dispatch::set_default`]: crate::dispatch::set_default
+//! [`with_default`]: crate::dispatch::with_default
+//! [err]: crate::field::Visit::record_error
+//!
 //! ## Related Crates
 //!
 //! In addition to `tracing` and `tracing-core`, the [`tokio-rs/tracing`] repository
 //! contains several additional crates designed to be used with the `tracing` ecosystem.
-//! This includes a collection of `Subscriber` implementations, as well as utility
-//! and adapter crates to assist in writing `Subscriber`s and instrumenting
+//! This includes a collection of `Collect` implementations, as well as utility
+//! and adapter crates to assist in writing collectors and instrumenting
 //! applications.
 //!
 //! In particular, the following crates are likely to be of interest:
 //!
 //!  - [`tracing-futures`] provides a compatibility layer with the `futures`
 //!    crate, allowing spans to be attached to `Future`s, `Stream`s, and `Executor`s.
-//!  - [`tracing-subscriber`] provides `Subscriber` implementations and
-//!    utilities for working with `Subscriber`s. This includes a [`FmtSubscriber`]
-//!    `FmtSubscriber` for logging formatted trace data to stdout, with similar
+//!  - [`tracing-subscriber`] provides `tracing_subscriber::Subscribe` implementations and
+//!    utilities for working with collectors. This includes a [`FmtSubscriber`]
+//!    for logging formatted trace data to stdout, with similar
 //!    filtering and formatting to the [`env_logger`] crate.
 //!  - [`tracing-log`] provides a compatibility layer with the [`log`] crate,
 //!    allowing log messages to be recorded as `tracing` `Event`s within the
@@ -732,7 +849,7 @@
 //!    (Linux-only).
 //!  - [`tracing-bunyan-formatter`] provides a layer implementation that reports events and spans
 //!    in [bunyan] format, enriched with timing information.
-//!  - [`tracing-wasm`] provides a `Subscriber`/`Layer` implementation that reports
+//!  - [`tracing-wasm`] provides a `Collect`/`Subscribe` implementation that reports
 //!    events and spans via browser `console.log` and [User Timing API (`window.performance`)].
 //!  - [`tracing-web`] provides a layer implementation of level-aware logging of events
 //!    to web browsers' `console.*` and span events to the [User Timing API (`window.performance`)].
@@ -740,7 +857,7 @@
 //!  - [`test-log`] takes care of initializing `tracing` for tests, based on
 //!    environment variables with an `env_logger` compatible syntax.
 //!  - [`tracing-unwrap`] provides convenience methods to report failed unwraps
-//!    on `Result` or `Option` types to a `Subscriber`.
+//!    on `Result` or `Option` types to a [`collect`].
 //!  - [`diesel-tracing`] provides integration with [`diesel`] database connections.
 //!  - [`tracing-tracy`] provides a way to collect [Tracy] profiles in instrumented
 //!    applications.
@@ -800,6 +917,15 @@
 //! [`tracing-cloudwatch`]: https://crates.io/crates/tracing-cloudwatch
 //! [`clippy-tracing`]: https://crates.io/crates/clippy-tracing
 //!
+<<<<<<< HEAD
+||||||| 386969ba
+//! <div class="information">
+//!     <div class="tooltip ignore" style="">ⓘ<span class="tooltiptext">Note</span></div>
+//! </div>
+//! <div class="example-wrap" style="display:inline-block">
+=======
+//! <div class="example-wrap" style="display:inline-block">
+>>>>>>> origin/master
 //! <pre class="ignore" style="white-space:normal;font:inherit;">
 //!     <strong>Note</strong>: Some of these ecosystem crates are currently
 //!     unreleased and/or in earlier stages of development. They may be less stable
@@ -812,11 +938,11 @@
 //!
 //! * A set of features controlling the [static verbosity level].
 //! * `log`: causes trace instrumentation points to emit [`log`] records as well
-//!   as trace events, if a default `tracing` subscriber has not been set. This
+//!   as trace events, if a default `tracing` collector has not been set. This
 //!   is intended for use in libraries whose users may be using either `tracing`
 //!   or `log`.
 //! * `log-always`: Emit `log` records from all `tracing` spans and events, even
-//!   if a `tracing` subscriber has been set. This should be set only by
+//!   if a `tracing` collector has been set. This should be set only by
 //!   applications which intend to collect traces and logs separately; if an
 //!   adapter is used to convert `log` records into `tracing` events, this will
 //!   cause duplicate events to occur.
@@ -824,7 +950,9 @@
 //!   This is on by default, but does bring in the `syn` crate as a dependency,
 //!   which may add to the compile time of crates that do not already use it.
 //! * `std`: Depend on the Rust standard library (enabled by default).
+//! * `alloc`: Depend on [`liballoc`] (enabled by "std").
 //!
+<<<<<<< HEAD
 //!   `no_std` users may disable this feature with `default-features = false`:
 //!
 //!   ```toml
@@ -868,6 +996,26 @@
 //! [field values]: crate::field
 //! [`valuable`]: https://crates.io/crates/valuable
 //!
+||||||| 386969ba
+//!   `no_std` users may disable this feature with `default-features = false`:
+//!
+//!   ```toml
+//!   [dependencies]
+//!   tracing = { version = "0.1.21", default-features = false }
+//!   ```
+//!
+//! <div class="information">
+//!     <div class="tooltip ignore" style="">ⓘ<span class="tooltiptext">Note</span></div>
+//! </div>
+//! <div class="example-wrap" style="display:inline-block">
+//! <pre class="ignore" style="white-space:normal;font:inherit;">
+//! <strong>Note</strong>: <code>tracing</code>'s <code>no_std</code> support
+//! requires <code>liballoc</code>.
+//! </pre></div>
+//!
+=======
+//! [`liballoc`]: https://doc.rust-lang.org/alloc/index.html
+>>>>>>> origin/master
 //! ## Supported Rust Versions
 //!
 //! Tracing is built against the latest stable release. The minimum supported
@@ -883,22 +1031,19 @@
 //! long as doing so complies with this policy.
 //!
 //! [`log`]: https://docs.rs/log/0.4.6/log/
-//! [span]: mod@span
 //! [spans]: mod@span
 //! [`Span`]: span::Span
 //! [`in_scope`]: span::Span::in_scope
 //! [event]: Event
 //! [events]: Event
-//! [`Subscriber`]: subscriber::Subscriber
-//! [Subscriber::event]: subscriber::Subscriber::event
-//! [`enter`]: subscriber::Subscriber::enter
-//! [`exit`]: subscriber::Subscriber::exit
-//! [`enabled`]: subscriber::Subscriber::enabled
+//! [`collect`]: collect::Collect
+//! [Collect::event]: fn@collect::Collect::event
+//! [`enter`]: collect::Collect::enter
+//! [`exit`]: collect::Collect::exit
+//! [`enabled`]: collect::Collect::enabled
 //! [metadata]: Metadata
-//! [`field::display`]: field::display
-//! [`field::debug`]: field::debug
-//! [`set_global_default`]: subscriber::set_global_default
-//! [`with_default`]: subscriber::with_default
+//! [`set_global_default`]: collect::set_global_default
+//! [`with_default`]: collect::with_default
 //! [`tokio-rs/tracing`]: https://github.com/tokio-rs/tracing
 //! [`tracing-futures`]: https://crates.io/crates/tracing-futures
 //! [`tracing-subscriber`]: https://crates.io/crates/tracing-subscriber
@@ -907,13 +1052,29 @@
 //! [`tracing-appender`]: https://crates.io/crates/tracing-appender
 //! [`env_logger`]: https://crates.io/crates/env_logger
 //! [`FmtSubscriber`]: https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/struct.Subscriber.html
+<<<<<<< HEAD
 //! [static verbosity level]: level_filters#compile-time-filters
 //! [instrument]: https://docs.rs/tracing-attributes/latest/tracing_attributes/attr.instrument.html
+||||||| 386969ba
+//! [static verbosity level]: level_filters/index.html#compile-time-filters
+//! [instrument]: https://docs.rs/tracing-attributes/latest/tracing_attributes/attr.instrument.html
+=======
+//! [static verbosity level]: level_filters#compile-time-filters
+//! [instrument]: tracing_attributes::instrument
+>>>>>>> origin/master
 //! [flags]: #crate-feature-flags
 #![cfg_attr(not(feature = "std"), no_std)]
+<<<<<<< HEAD
 #![cfg_attr(docsrs, feature(doc_cfg), deny(rustdoc::broken_intra_doc_links))]
+||||||| 386969ba
+#![cfg_attr(docsrs, feature(doc_cfg), deny(broken_intra_doc_links))]
+#![doc(html_root_url = "https://docs.rs/tracing/0.1.21")]
+=======
+#![cfg_attr(docsrs, feature(doc_cfg))]
+>>>>>>> origin/master
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png",
+    html_favicon_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/favicon.ico",
     issue_tracker_base_url = "https://github.com/tokio-rs/tracing/issues/"
 )]
 #![warn(
@@ -939,9 +1100,23 @@
     while_true
 )]
 
+<<<<<<< HEAD
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
+||||||| 386969ba
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[macro_use]
+extern crate cfg_if;
+
+#[cfg(feature = "log")]
+#[doc(hidden)]
+pub use log;
+
+=======
+>>>>>>> origin/master
 // Somehow this `use` statement is necessary for us to re-export the `core`
 // macros on Rust 1.26.0. I'm not sure how this makes it work, but it does.
 #[allow(unused_imports)]
@@ -950,7 +1125,7 @@ use tracing_core::*;
 
 #[doc(inline)]
 pub use self::instrument::Instrument;
-pub use self::{dispatcher::Dispatch, event::Event, field::Value, subscriber::Subscriber};
+pub use self::{collect::Collect, dispatch::Dispatch, event::Event, field::Value};
 
 #[doc(hidden)]
 pub use self::span::Id;
@@ -972,23 +1147,38 @@ pub use tracing_attributes::instrument;
 #[macro_use]
 mod macros;
 
-pub mod dispatcher;
+pub mod collect;
+pub mod dispatch;
 pub mod field;
 /// Attach a span to a `std::future::Future`.
 pub mod instrument;
 pub mod level_filters;
 pub mod span;
-pub(crate) mod stdlib;
-pub mod subscriber;
 
 #[doc(hidden)]
 pub mod __macro_support {
+<<<<<<< HEAD
     pub use crate::callsite::Callsite;
     use crate::{subscriber::Interest, Metadata};
     // Re-export the `core` functions that are used in macros. This allows
     // a crate to be named `core` and avoid name clashes.
     // See here: https://github.com/tokio-rs/tracing/issues/2761
     pub use core::{concat, format_args, iter::Iterator, option::Option};
+||||||| 386969ba
+    pub use crate::callsite::Callsite;
+    use crate::stdlib::sync::atomic::{AtomicUsize, Ordering};
+    use crate::{subscriber::Interest, Metadata};
+    use tracing_core::Once;
+=======
+    pub use crate::callsite::{Callsite, Registration};
+    use crate::{collect::Interest, Metadata};
+    use core::fmt;
+    use core::sync::atomic::{AtomicU8, Ordering};
+    // Re-export the `core` functions that are used in macros. This allows
+    // a crate to be named `core` and avoid name clashes.
+    // See here: https://github.com/tokio-rs/tracing/issues/2761
+    pub use core::{concat, file, format_args, iter::Iterator, line, option::Option};
+>>>>>>> origin/master
 
     /// Callsite implementation used by macro-generated code.
     ///
@@ -998,6 +1188,7 @@ pub mod __macro_support {
     /// by the `tracing` macros, but it is not part of the stable versioned API.
     /// Breaking changes to this module may occur in small-numbered versions
     /// without warning.
+<<<<<<< HEAD
     pub use tracing_core::callsite::DefaultCallsite as MacroCallsite;
 
     /// /!\ WARNING: This is *not* a stable API! /!\
@@ -1008,8 +1199,25 @@ pub mod __macro_support {
     /// without warning.
     pub fn __is_enabled(meta: &Metadata<'static>, interest: Interest) -> bool {
         interest.is_always() || crate::dispatcher::get_default(|default| default.enabled(meta))
+||||||| 386969ba
+    #[derive(Debug)]
+    pub struct MacroCallsite {
+        interest: AtomicUsize,
+        meta: &'static Metadata<'static>,
+        registration: Once,
+=======
+    pub struct MacroCallsite<T = &'static dyn Callsite>
+    where
+        T: 'static,
+    {
+        interest: AtomicU8,
+        register: AtomicU8,
+        meta: &'static Metadata<'static>,
+        registration: &'static Registration<T>,
+>>>>>>> origin/master
     }
 
+<<<<<<< HEAD
     /// /!\ WARNING: This is *not* a stable API! /!\
     /// This function, and all code contained in the `__macro_support` module, is
     /// a *private* API of `tracing`. It is exposed publicly because it is used
@@ -1020,6 +1228,224 @@ pub mod __macro_support {
     #[cfg(feature = "log")]
     pub fn __disabled_span(meta: &'static Metadata<'static>) -> crate::Span {
         crate::Span::new_disabled(meta)
+||||||| 386969ba
+    impl MacroCallsite {
+        /// Returns a new `MacroCallsite` with the specified `Metadata`.
+        ///
+        /// /!\ WARNING: This is *not* a stable API! /!\
+        /// This method, and all code contained in the `__macro_support` module, is
+        /// a *private* API of `tracing`. It is exposed publicly because it is used
+        /// by the `tracing` macros, but it is not part of the stable versioned API.
+        /// Breaking changes to this module may occur in small-numbered versions
+        /// without warning.
+        pub const fn new(meta: &'static Metadata<'static>) -> Self {
+            Self {
+                interest: AtomicUsize::new(0xDEADFACED),
+                meta,
+                registration: Once::new(),
+            }
+        }
+
+        /// Registers this callsite with the global callsite registry.
+        ///
+        /// If the callsite is already registered, this does nothing.
+        ///
+        /// /!\ WARNING: This is *not* a stable API! /!\
+        /// This method, and all code contained in the `__macro_support` module, is
+        /// a *private* API of `tracing`. It is exposed publicly because it is used
+        /// by the `tracing` macros, but it is not part of the stable versioned API.
+        /// Breaking changes to this module may occur in small-numbered versions
+        /// without warning.
+        #[inline(never)]
+        // This only happens once (or if the cached interest value was corrupted).
+        #[cold]
+        pub fn register(&'static self) -> Interest {
+            self.registration
+                .call_once(|| crate::callsite::register(self));
+            match self.interest.load(Ordering::Relaxed) {
+                0 => Interest::never(),
+                2 => Interest::always(),
+                _ => Interest::sometimes(),
+            }
+        }
+
+        /// Returns the callsite's cached Interest, or registers it for the
+        /// first time if it has not yet been registered.
+        ///
+        /// /!\ WARNING: This is *not* a stable API! /!\
+        /// This method, and all code contained in the `__macro_support` module, is
+        /// a *private* API of `tracing`. It is exposed publicly because it is used
+        /// by the `tracing` macros, but it is not part of the stable versioned API.
+        /// Breaking changes to this module may occur in small-numbered versions
+        /// without warning.
+        #[inline]
+        pub fn interest(&'static self) -> Interest {
+            match self.interest.load(Ordering::Relaxed) {
+                0 => Interest::never(),
+                1 => Interest::sometimes(),
+                2 => Interest::always(),
+                _ => self.register(),
+            }
+        }
+
+        pub fn is_enabled(&self, interest: Interest) -> bool {
+            interest.is_always()
+                || crate::dispatcher::get_default(|default| default.enabled(self.meta))
+        }
+
+        #[inline]
+        #[cfg(feature = "log")]
+        pub fn disabled_span(&self) -> crate::Span {
+            crate::Span::new_disabled(self.meta)
+        }
+
+        #[inline]
+        #[cfg(not(feature = "log"))]
+        pub fn disabled_span(&self) -> crate::Span {
+            crate::Span::none()
+        }
+=======
+    impl<T: 'static> MacroCallsite<T> {
+        /// Returns a new `MacroCallsite` with the specified `Metadata`.
+        ///
+        /// /!\ WARNING: This is *not* a stable API! /!\
+        /// This method, and all code contained in the `__macro_support` module, is
+        /// a *private* API of `tracing`. It is exposed publicly because it is used
+        /// by the `tracing` macros, but it is not part of the stable versioned API.
+        /// Breaking changes to this module may occur in small-numbered versions
+        /// without warning.
+        pub const fn new(
+            meta: &'static Metadata<'static>,
+            registration: &'static Registration<T>,
+        ) -> Self {
+            Self {
+                interest: AtomicU8::new(Self::INTEREST_EMPTY),
+                register: AtomicU8::new(Self::UNREGISTERED),
+                meta,
+                registration,
+            }
+        }
+
+        const UNREGISTERED: u8 = 0;
+        const REGISTERING: u8 = 1;
+        const REGISTERED: u8 = 2;
+
+        const INTEREST_NEVER: u8 = 0;
+        const INTEREST_SOMETIMES: u8 = 1;
+        const INTEREST_ALWAYS: u8 = 2;
+        const INTEREST_EMPTY: u8 = 0xFF;
+    }
+
+    impl MacroCallsite<&'static dyn Callsite> {
+        /// Registers this callsite with the global callsite registry.
+        ///
+        /// If the callsite is already registered, this does nothing.
+        ///
+        /// /!\ WARNING: This is *not* a stable API! /!\
+        /// This method, and all code contained in the `__macro_support` module, is
+        /// a *private* API of `tracing`. It is exposed publicly because it is used
+        /// by the `tracing` macros, but it is not part of the stable versioned API.
+        /// Breaking changes to this module may occur in small-numbered versions
+        /// without warning.
+        #[inline(never)]
+        // This only happens once (or if the cached interest value was corrupted).
+        #[cold]
+        pub fn register(&'static self) -> Interest {
+            // Attempt to advance the registration state to `REGISTERING`...
+            match self.register.compare_exchange(
+                Self::UNREGISTERED,
+                Self::REGISTERING,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(_) => {
+                    // Okay, we advanced the state, try to register the callsite.
+                    crate::callsite::register(self.registration);
+                    self.register.store(Self::REGISTERED, Ordering::Release);
+                }
+                // Great, the callsite is already registered! Just load its
+                // previous cached interest.
+                Err(Self::REGISTERED) => {}
+                // Someone else is registering...
+                Err(_state) => {
+                    debug_assert_eq!(
+                        _state,
+                        Self::REGISTERING,
+                        "weird callsite registration state"
+                    );
+                    // Just hit `enabled` this time.
+                    return Interest::sometimes();
+                }
+            }
+
+            match self.interest.load(Ordering::Relaxed) {
+                Self::INTEREST_NEVER => Interest::never(),
+                Self::INTEREST_ALWAYS => Interest::always(),
+                _ => Interest::sometimes(),
+            }
+        }
+
+        /// Returns the callsite's cached Interest, or registers it for the
+        /// first time if it has not yet been registered.
+        ///
+        /// /!\ WARNING: This is *not* a stable API! /!\
+        /// This method, and all code contained in the `__macro_support` module, is
+        /// a *private* API of `tracing`. It is exposed publicly because it is used
+        /// by the `tracing` macros, but it is not part of the stable versioned API.
+        /// Breaking changes to this module may occur in small-numbered versions
+        /// without warning.
+        #[inline]
+        pub fn interest(&'static self) -> Interest {
+            match self.interest.load(Ordering::Relaxed) {
+                Self::INTEREST_NEVER => Interest::never(),
+                Self::INTEREST_SOMETIMES => Interest::sometimes(),
+                Self::INTEREST_ALWAYS => Interest::always(),
+                _ => self.register(),
+            }
+        }
+
+        pub fn is_enabled(&self, interest: Interest) -> bool {
+            interest.is_always()
+                || crate::dispatch::get_default(|default| default.enabled(self.meta))
+        }
+
+        #[inline]
+        #[cfg(feature = "log")]
+        pub fn disabled_span(&self) -> crate::Span {
+            crate::Span::new_disabled(self.meta)
+        }
+
+        #[inline]
+        #[cfg(not(feature = "log"))]
+        pub fn disabled_span(&self) -> crate::Span {
+            crate::Span::none()
+        }
+
+        #[cfg(feature = "log")]
+        pub fn log(
+            &self,
+            logger: &'static dyn log::Log,
+            log_meta: log::Metadata<'_>,
+            values: &tracing_core::field::ValueSet<'_>,
+        ) {
+            let meta = self.metadata();
+            logger.log(
+                &crate::log::Record::builder()
+                    .file(meta.file())
+                    .module_path(meta.module_path())
+                    .line(meta.line())
+                    .metadata(log_meta)
+                    .args(format_args!(
+                        "{}",
+                        crate::log::LogValueSet {
+                            values,
+                            is_first: true
+                        }
+                    ))
+                    .build(),
+            );
+        }
+>>>>>>> origin/master
     }
 
     /// /!\ WARNING: This is *not* a stable API! /!\
@@ -1118,8 +1544,94 @@ pub mod log {
                 is_first: self.is_first,
                 result: Ok(()),
             };
+<<<<<<< HEAD
             self.values.record(&mut visit);
             visit.result
+||||||| 386969ba
+            self.interest.store(interest, Ordering::SeqCst);
+        }
+
+        #[inline(always)]
+        fn metadata(&self) -> &Metadata<'static> {
+            &self.meta
+=======
+            self.interest.store(interest, Ordering::SeqCst);
+        }
+
+        #[inline(always)]
+        fn metadata(&self) -> &Metadata<'static> {
+            self.meta
+        }
+    }
+
+    impl fmt::Debug for MacroCallsite {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.debug_struct("MacroCallsite")
+                .field("interest", &self.interest)
+                .field("meta", &self.meta)
+                .field("register", &self.register)
+                .field("registration", &self.registration)
+                .finish()
+        }
+    }
+}
+
+#[cfg(feature = "log")]
+#[doc(hidden)]
+pub mod log {
+    use core::fmt;
+    pub use log::*;
+    use tracing_core::field::{Field, ValueSet, Visit};
+
+    /// Utility to format [`ValueSet`]s for logging.
+    pub(crate) struct LogValueSet<'a> {
+        pub(crate) values: &'a ValueSet<'a>,
+        pub(crate) is_first: bool,
+    }
+
+    impl<'a> fmt::Display for LogValueSet<'a> {
+        #[inline]
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            struct LogVisitor<'a, 'b> {
+                f: &'a mut fmt::Formatter<'b>,
+                is_first: bool,
+                result: fmt::Result,
+            }
+
+            impl Visit for LogVisitor<'_, '_> {
+                fn record_debug(&mut self, field: &Field, value: &dyn fmt::Debug) {
+                    let res = if self.is_first {
+                        self.is_first = false;
+                        if field.name() == "message" {
+                            write!(self.f, "{:?}", value)
+                        } else {
+                            write!(self.f, "{}={:?}", field.name(), value)
+                        }
+                    } else {
+                        write!(self.f, " {}={:?}", field.name(), value)
+                    };
+                    if let Err(err) = res {
+                        self.result = self.result.and(Err(err));
+                    }
+                }
+
+                fn record_str(&mut self, field: &Field, value: &str) {
+                    if field.name() == "message" {
+                        self.record_debug(field, &format_args!("{}", value))
+                    } else {
+                        self.record_debug(field, &value)
+                    }
+                }
+            }
+
+            let mut visit = LogVisitor {
+                f,
+                is_first: self.is_first,
+                result: Ok(()),
+            };
+            self.values.record(&mut visit);
+            visit.result
+>>>>>>> origin/master
         }
     }
 }

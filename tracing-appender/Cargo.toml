@@ -1,6 +1,12 @@
 [package]
 name = "tracing-appender"
+<<<<<<< HEAD
 version = "0.2.3"
+||||||| 386969ba
+version = "0.1.1"
+=======
+version = "0.2.0"
+>>>>>>> origin/master
 authors = [
     "Zeki Sherif <zekshi@amazon.com>",
     "Tokio Contributors <team@tokio.rs>"
@@ -18,9 +24,15 @@ categories = [
 ]
 keywords = ["logging", "tracing", "file-appender", "non-blocking-writer"]
 edition = "2018"
+<<<<<<< HEAD
 rust-version = "1.63.0"
+||||||| 386969ba
+=======
+rust-version = "1.53.0"
+>>>>>>> origin/master
 
 [dependencies]
+<<<<<<< HEAD
 crossbeam-channel = "0.5.6"
 time = { version = "0.3.2", default-features = false, features = ["formatting", "parsing"] }
 parking_lot = { optional = true, version = "0.12.1" }
@@ -28,15 +40,33 @@ thiserror = "1"
 # tracing = { version = "0.1" }
 # tracing = { path = "../tracing", version = "0.1.35" }
 # tracing-subscriber = { version = "0.3", features = ["env-filter", "tracing-log"] }
+||||||| 386969ba
+crossbeam-channel = "0.4.2"
+chrono = "0.4.11"
+=======
+crossbeam-channel = "0.5.5"
+time = { version = "0.3.2", default-features = false, features = ["formatting", "parsing"] }
+parking_lot = { optional = true, version = "0.12.1" }
+thiserror = "1.0.31"
+>>>>>>> origin/master
 
 [dependencies.tracing-subscriber]
+<<<<<<< HEAD
 version = "0.3"
 # path = "../tracing-subscriber"
 # version = "0.3.18"
+||||||| 386969ba
+path = "../tracing-subscriber"
+version = "0.2.7"
+=======
+path = "../tracing-subscriber"
+version = "0.3"
+>>>>>>> origin/master
 default-features = false
 features = ["fmt", "std"]
 
 [dev-dependencies]
+<<<<<<< HEAD
 criterion = { version = "0.3.6", default-features = false }
 tracing = { version = "0.1" }
 # tracing = { path = "../tracing", version = "0.1.35" }
@@ -45,3 +75,16 @@ tempfile = "3"
 [[bench]]
 name = "bench"
 harness = false
+||||||| 386969ba
+tracing = { path = "../tracing", version = "0.1" }
+tempdir = "0.3"
+=======
+criterion = { version = "0.3.6", default-features = false }
+tracing = { path = "../tracing", version = "0.2" }
+time = { version = "0.3.2", default-features = false, features = ["formatting", "parsing"] }
+tempfile = "3.3.0"
+
+[[bench]]
+name = "bench"
+harness = false
+>>>>>>> origin/master

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use crate::{
     dispatcher::{self, Dispatch},
     span::Span,
@@ -9,9 +10,33 @@ use core::{
     pin::Pin,
     task::{Context, Poll},
 };
+||||||| 386969ba
+use crate::stdlib::pin::Pin;
+use crate::stdlib::task::{Context, Poll};
+use crate::stdlib::{future::Future, marker::Sized};
+use crate::{dispatcher, span::Span, Dispatch};
+=======
+use crate::span::Span;
+use core::{
+    future::Future,
+    marker::Sized,
+    mem::ManuallyDrop,
+    pin::Pin,
+    task::{Context, Poll},
+};
+>>>>>>> origin/master
 use pin_project_lite::pin_project;
 
+<<<<<<< HEAD
 /// Attaches spans to a [`std::future::Future`].
+||||||| 386969ba
+/// Attaches spans to a `std::future::Future`.
+=======
+#[cfg(feature = "std")]
+use crate::dispatch::{self, Dispatch};
+
+/// Attaches spans to a [`std::future::Future`].
+>>>>>>> origin/master
 ///
 /// Extension trait allowing futures to be
 /// instrumented with a `tracing` [span].
@@ -131,15 +156,41 @@ pub trait Instrument: Sized {
 }
 
 /// Extension trait allowing futures to be instrumented with
+<<<<<<< HEAD
 /// a `tracing` [`Subscriber`](crate::Subscriber).
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub trait WithSubscriber: Sized {
     /// Attaches the provided [`Subscriber`] to this type, returning a
     /// [`WithDispatch`] wrapper.
+||||||| 386969ba
+/// a `tracing` [`Subscriber`].
+///
+/// [`Subscriber`]: ../trait.Subscriber.html
+pub trait WithSubscriber: Sized {
+    /// Attaches the provided [`Subscriber`] to this type, returning a
+    /// `WithDispatch` wrapper.
+=======
+/// a `tracing` collector.
+///
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+pub trait WithCollector: Sized {
+    /// Attaches the provided [collector] to this type, returning a
+    /// [`WithDispatch`] wrapper.
+>>>>>>> origin/master
     ///
+<<<<<<< HEAD
     /// The attached [`Subscriber`] will be set as the [default] when the returned
     /// [`Future`] is polled.
+||||||| 386969ba
+    /// The attached subscriber will be set as the [default] when the returned `Future` is polled.
+=======
+    /// The attached [collector] will be set as the [default] when the returned
+    /// [`Future`] is polled.
+>>>>>>> origin/master
     ///
+<<<<<<< HEAD
     /// # Examples
     ///
     /// ```
@@ -174,24 +225,103 @@ pub trait WithSubscriber: Sized {
     /// [default]: crate::dispatcher#setting-the-default-subscriber
     /// [`Future`]: std::future::Future
     fn with_subscriber<S>(self, subscriber: S) -> WithDispatch<Self>
+||||||| 386969ba
+    /// [`Subscriber`]: ../trait.Subscriber.html
+    /// [default]: https://docs.rs/tracing/latest/tracing/dispatcher/index.html#setting-the-default-subscriber
+    fn with_subscriber<S>(self, subscriber: S) -> WithDispatch<Self>
+=======
+    /// # Examples
+    ///
+    /// ```
+    /// # pub struct MyCollector;
+    /// # impl tracing::Collect for MyCollector {
+    /// #   fn new_span(&self, _: &tracing::span::Attributes) -> tracing::span::Id {
+    /// #       tracing::span::Id::from_u64(0)
+    /// #   }
+    /// #   fn record(&self, _: &tracing::span::Id, _: &tracing::span::Record) {}
+    /// #   fn event(&self, _: &tracing::Event<'_>) {}
+    /// #   fn record_follows_from(&self, _: &tracing::span::Id, _: &tracing::span::Id) {}
+    /// #   fn enabled(&self, _: &tracing::Metadata) -> bool { false }
+    /// #   fn enter(&self, _: &tracing::span::Id) {}
+    /// #   fn exit(&self, _: &tracing::span::Id) {}
+    /// #   fn current_span(&self) -> tracing_core::span::Current {
+    /// #       tracing_core::span::Current::unknown()
+    /// #    }
+    /// # }
+    /// # impl MyCollector { fn new() -> Self { Self } }
+    /// # async fn docs() {
+    /// use tracing::instrument::WithCollector;
+    ///
+    /// // Set the default collector
+    /// let _default = tracing::collect::set_default(MyCollector::new());
+    ///
+    /// tracing::info!("this event will be recorded by the default collector");
+    ///
+    /// // Create a different collector and attach it to a future.
+    /// let other_collector = MyCollector::new();
+    /// let future = async {
+    ///     tracing::info!("this event will be recorded by the other collector");
+    ///     // ...
+    /// };
+    ///
+    /// future
+    ///     // Attach the other collector to the future before awaiting it
+    ///     .with_collector(other_collector)
+    ///     .await;
+    ///
+    /// // Once the future has completed, we return to the default collector.
+    /// tracing::info!("this event will be recorded by the default collector");
+    /// # }
+    /// ```
+    ///
+    /// [collector]: super::Collect
+    /// [default]: crate::dispatch#setting-the-default-collector
+    /// [`Future`]: std::future::Future
+    fn with_collector<C>(self, collector: C) -> WithDispatch<Self>
+>>>>>>> origin/master
     where
-        S: Into<Dispatch>,
+        C: Into<Dispatch>,
     {
         WithDispatch {
             inner: self,
+<<<<<<< HEAD
             dispatcher: subscriber.into(),
+||||||| 386969ba
+            dispatch: subscriber.into(),
+=======
+            dispatch: collector.into(),
+>>>>>>> origin/master
         }
     }
 
+<<<<<<< HEAD
     /// Attaches the current [default] [`Subscriber`] to this type, returning a
     /// [`WithDispatch`] wrapper.
+||||||| 386969ba
+    /// Attaches the current [default] [`Subscriber`] to this type, returning a
+    /// `WithDispatch` wrapper.
+=======
+    /// Attaches the current [default] [collector] to this type, returning a
+    /// [`WithDispatch`] wrapper.
+>>>>>>> origin/master
     ///
+<<<<<<< HEAD
     /// The attached `Subscriber` will be set as the [default] when the returned
     /// [`Future`] is polled.
+||||||| 386969ba
+    /// When the wrapped type is a future, stream, or sink, the attached
+    /// subscriber will be set as the [default] while it is being polled.
+    /// When the wrapped type is an executor, the subscriber will be set as the
+    /// default for any futures spawned on that executor.
+=======
+    /// The attached collector will be set as the [default] when the returned
+    /// [`Future`] is polled.
+>>>>>>> origin/master
     ///
     /// This can be used to propagate the current dispatcher context when
     /// spawning a new future that may run on a different thread.
     ///
+<<<<<<< HEAD
     /// # Examples
     ///
     /// ```
@@ -224,16 +354,76 @@ pub trait WithSubscriber: Sized {
     /// [`Subscriber`]: super::Subscriber
     /// [default]: crate::dispatcher#setting-the-default-subscriber
     /// [`Future`]: std::future::Future
+||||||| 386969ba
+    /// [`Subscriber`]: ../trait.Subscriber.html
+    /// [default]: https://docs.rs/tracing/latest/tracing/dispatcher/index.html#setting-the-default-subscriber
+=======
+    /// # Examples
+    ///
+    /// ```
+    /// # mod tokio {
+    /// #     pub(super) fn spawn(_: impl std::future::Future) {}
+    /// # }
+    /// # pub struct MyCollector;
+    /// # impl tracing::Collect for MyCollector {
+    /// #   fn new_span(&self, _: &tracing::span::Attributes) -> tracing::span::Id {
+    /// #       tracing::span::Id::from_u64(0)
+    /// #   }
+    /// #   fn record(&self, _: &tracing::span::Id, _: &tracing::span::Record) {}
+    /// #   fn event(&self, _: &tracing::Event<'_>) {}
+    /// #   fn record_follows_from(&self, _: &tracing::span::Id, _: &tracing::span::Id) {}
+    /// #   fn enabled(&self, _: &tracing::Metadata) -> bool { false }
+    /// #   fn enter(&self, _: &tracing::span::Id) {}
+    /// #   fn exit(&self, _: &tracing::span::Id) {}
+    /// #   fn current_span(&self) -> tracing_core::span::Current {
+    /// #       tracing_core::span::Current::unknown()
+    /// #    }
+    /// # }
+    /// # impl MyCollector { fn new() -> Self { Self } }
+    /// # async fn docs() {
+    /// use tracing::instrument::WithCollector;
+    ///
+    /// // Using `set_default` (rather than `set_global_default`) sets the
+    /// // default collector for *this* thread only.
+    /// let _default = tracing::collect::set_default(MyCollector::new());
+    ///
+    /// let future = async {
+    ///     // ...
+    /// };
+    ///
+    /// // If a multi-threaded async runtime is in use, this spawned task may
+    /// // run on a different thread, in a different default collector's context.
+    /// tokio::spawn(future);
+    ///
+    /// // However, calling `with_current_collector` on the future before
+    /// // spawning it, ensures that the current thread's default collector is
+    /// // propagated to the spawned task, regardless of where it executes:
+    /// # let future = async { };
+    /// tokio::spawn(future.with_current_collector());
+    /// # }
+    /// ```
+    /// [collector]: super::Collect
+    /// [default]: crate::dispatch#setting-the-default-collector
+    /// [`Future`]: std::future::Future
+>>>>>>> origin/master
     #[inline]
-    fn with_current_subscriber(self) -> WithDispatch<Self> {
+    fn with_current_collector(self) -> WithDispatch<Self> {
         WithDispatch {
             inner: self,
+<<<<<<< HEAD
             dispatcher: crate::dispatcher::get_default(|default| default.clone()),
+||||||| 386969ba
+            dispatch: dispatcher::get_default(|default| default.clone()),
+=======
+            dispatch: dispatch::get_default(|default| default.clone()),
+>>>>>>> origin/master
         }
     }
 }
 
+#[cfg(feature = "std")]
 pin_project! {
+<<<<<<< HEAD
     /// A [`Future`] that has been instrumented with a `tracing` [`Subscriber`].
     ///
     /// This type is returned by the [`WithSubscriber`] extension trait. See that
@@ -241,6 +431,17 @@ pin_project! {
     ///
     /// [`Future`]: std::future::Future
     /// [`Subscriber`]: crate::Subscriber
+||||||| 386969ba
+    /// A future that has been instrumented with a `tracing` subscriber.
+=======
+    /// A [`Future`] that has been instrumented with a `tracing` [collector].
+    ///
+    /// This type is returned by the [`WithCollector`] extension trait. See that
+    /// trait's documentation for details.
+    ///
+    /// [`Future`]: std::future::Future
+    /// [collector]: crate::Collector
+>>>>>>> origin/master
     #[derive(Clone, Debug)]
     #[must_use = "futures do nothing unless you `.await` or poll them"]
     #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
@@ -347,6 +548,7 @@ impl<T> Instrumented<T> {
 
     /// Get a pinned reference to the wrapped type.
     pub fn inner_pin_ref(self: Pin<&Self>) -> Pin<&T> {
+<<<<<<< HEAD
         self.project_ref().span_and_inner_pin_ref().1
     }
 
@@ -412,6 +614,75 @@ impl<T> WithDispatch<T> {
 
     /// Get a pinned reference to the wrapped type.
     pub fn inner_pin_ref(self: Pin<&Self>) -> Pin<&T> {
+||||||| 386969ba
+=======
+        self.project_ref().span_and_inner_pin_ref().1
+    }
+
+    /// Get a pinned mutable reference to the wrapped type.
+    pub fn inner_pin_mut(self: Pin<&mut Self>) -> Pin<&mut T> {
+        self.project().span_and_inner_pin_mut().1
+    }
+
+    /// Consumes the `Instrumented`, returning the wrapped type.
+    ///
+    /// Note that this drops the span.
+    pub fn into_inner(self) -> T {
+        // To manually destructure `Instrumented` without `Drop`, we
+        // move it into a ManuallyDrop and use pointers to its fields
+        let this = ManuallyDrop::new(self);
+        let span: *const Span = &this.span;
+        let inner: *const ManuallyDrop<T> = &this.inner;
+        // SAFETY: Those pointers are valid for reads, because `Drop` didn't
+        //         run, and properly aligned, because `Instrumented` isn't
+        //         `#[repr(packed)]`.
+        let _span = unsafe { span.read() };
+        let inner = unsafe { inner.read() };
+        ManuallyDrop::into_inner(inner)
+    }
+}
+
+// === impl WithDispatch ===
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<T: Future> Future for WithDispatch<T> {
+    type Output = T::Output;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.project();
+        let dispatch = this.dispatch;
+        let future = this.inner;
+        let _default = dispatch::set_default(dispatch);
+        future.poll(cx)
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<T: Sized> WithCollector for T {}
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+impl<T> WithDispatch<T> {
+    /// Borrows the [`Dispatch`] that is entered when this type is polled.
+    pub fn dispatch(&self) -> &Dispatch {
+        &self.dispatch
+    }
+
+    /// Borrows the wrapped type.
+    pub fn inner(&self) -> &T {
+        &self.inner
+    }
+
+    /// Mutably borrows the wrapped type.
+    pub fn inner_mut(&mut self) -> &mut T {
+        &mut self.inner
+    }
+
+    /// Get a pinned reference to the wrapped type.
+    pub fn inner_pin_ref(self: Pin<&Self>) -> Pin<&T> {
+>>>>>>> origin/master
         self.project_ref().inner
     }
 

@@ -5,8 +5,8 @@ This directory contains a collection of examples that demonstrate the use of the
 
 - **tracing**:
   + `counters`: Implements a very simple metrics system to demonstrate how
-    subscribers can consume field values as typed data.
-  + `sloggish`: A demo `Subscriber` implementation that mimics the output of
+    collectors can consume field values as typed data.
+  + `sloggish`: A demo `Collect` implementation that mimics the output of
     `slog-term`'s `Compact` formatter.
 - **tracing-attributes**:
   + `attrs-basic`: A simple example of the `#[instrument]` attribute.
@@ -16,10 +16,19 @@ This directory contains a collection of examples that demonstrate the use of the
     Fibonacci numbers, to demonstrate how the `#[instrument]` attribute can
     record function arguments.
 - **tracing-subscriber**:
+<<<<<<< HEAD
   + `fmt`: Demonstrates the use of the [`fmt`] module in `tracing-subscriber`,
     which provides a subscriber implementation that logs traces to the console.
     This example uses the default formatter ([`format::Full`]).
+||||||| 386969ba
+  + `fmt`: Demonstrates the use of the `fmt` module in `tracing-subscriber`,
+    which provides a subscriber implementation that logs traces to the console.
+=======
+  + `fmt`: Demonstrates the use of the `fmt` module in `tracing-subscriber`,
+    which provides a collector implementation that logs traces to the console.
+>>>>>>> origin/master
   + `fmt-stderr`: Demonstrates overriding the output stream used by the `fmt`
+<<<<<<< HEAD
     subscriber.
   + `fmt-pretty`: Demonstrates the output of the [`format::Pretty`] formatter in
     [`tracing-subscriber::fmt`][`fmt`].
@@ -28,21 +37,48 @@ This directory contains a collection of examples that demonstrate the use of the
   + `fmt-json`: Demonstrates the output of the [`format::Json`] formatter in
     [`tracing-subscriber::fmt`][`fmt`].
   + `fmt-custom-field`: Demonstrates overriding how the [`fmt`] subscriber formats
+||||||| 386969ba
+    subscriber.
+  + `fmt-custom-field`: Demonstrates overriding how the `fmt` subscriber formats
+=======
+    collector.
+  + `fmt-custom-field`: Demonstrates overriding how the `fmt` collector formats
+>>>>>>> origin/master
     fields on spans and events.
+<<<<<<< HEAD
   + `fmt-custom-event`: Demonstrates overriding how the [`fmt`] subscriber formats
+||||||| 386969ba
+  + `fmt-custom-event`: Demonstrates overriding how the `fmt` subscriber formats
+=======
+  + `fmt-custom-event`: Demonstrates overriding how the `fmt` collector formats
+>>>>>>> origin/master
     events.
+<<<<<<< HEAD
   + `fmt-multiple-writers`: demonstrates how [`fmt::Layer`] can write
     to multiple destinations (in this instance, stdout and a file) simultaneously.
   + `fmt-source-locations`: demonstrates displaying source code locations
     with [`fmt::Layer`].
+||||||| 386969ba
+=======
+  + `fmt-multiple-writers.rs`: demonstrates how `fmt::Subcriber` can write to multiple
+    destinations (in this instance, stdout and a file) simultaneously.
+  + `fmt-source-locations.rs`: demonstrates displaying source code locations
+    with `fmt::Subscriber`.
+>>>>>>> origin/master
   + `subscriber-filter`: Demonstrates the `tracing-subscriber::filter` module,
-    which provides a layer which adds configurable filtering to a subscriber
+    which provides a subscriber which adds configurable filtering to a collector
     implementation.
   + `tower-load`: Demonstrates how dynamically reloadable filters can be used to
     debug a server under load in production.
+<<<<<<< HEAD
   + `journald`: Demonstrates how to use [`fmt`] and `journald` layers to output to
+||||||| 386969ba
+  + `journald`: Demonstrates how to use `fmt` and `journald` layers to output to
+=======
+  + `journald`: Demonstrates how to use `fmt` and `journald` subscribers to output to
+>>>>>>> origin/master
     both the terminal and the system journal.
-  + `toggle-layers` : Demonstrates how Layers can be wrapped with an `Option` allowing
+  + `toggle-subscribers` : Demonstrates how subscribers can be wrapped with an `Option` allowing
     them to be dynamically toggled.
 - **tracing-futures**:
   + `spawny-thing`: Demonstrates the use of the `#[instrument]` attribute macro
@@ -66,7 +102,7 @@ This directory contains a collection of examples that demonstrate the use of the
     simple `tower` HTTP/1.1 server.
 - **tracing-serde**:
   + `serde-yak-shave`: Demonstrates the use of `tracing-serde` by implementing a
-    subscriber that emits trace output as JSON.
+    collector that emits trace output as JSON.
 - **tracing-log**:
   + `hyper-echo`: Demonstrates how `tracing-log` can be used to record
     unstructured logs from dependencies as `tracing` events, by instrumenting

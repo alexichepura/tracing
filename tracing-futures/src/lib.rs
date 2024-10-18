@@ -12,7 +12,7 @@
 //! * [`Instrument`] allows a `tracing` [span] to be attached to a future, sink,
 //!   stream, or executor.
 //!
-//! * [`WithSubscriber`] allows a `tracing` [`Subscriber`] to be attached to a
+//! * [`WithCollector`] allows a `tracing` [collector] to be attached to a
 //!   future, sink, stream, or executor.
 //!
 //! *Compiler support: [requires `rustc` 1.63+][msrv]*
@@ -25,11 +25,11 @@
 //! features with other crates in the asynchronous ecosystem:
 //!
 //! - `tokio`: Enables compatibility with the `tokio` crate, including
-//!    [`Instrument`] and [`WithSubscriber`] implementations for
+//!    [`Instrument`] and [`WithCollector`] implementations for
 //!    `tokio::executor::Executor`, `tokio::runtime::Runtime`, and
 //!    `tokio::runtime::current_thread`. Enabled by default.
 //! - `tokio-executor`: Enables compatibility with the `tokio-executor`
-//!    crate, including [`Instrument`] and [`WithSubscriber`]
+//!    crate, including [`Instrument`] and [`WithCollector`]
 //!    implementations for types implementing `tokio_executor::Executor`.
 //!    This is intended primarily for use in crates which depend on
 //!    `tokio-executor` rather than `tokio`; in general the `tokio` feature
@@ -52,8 +52,20 @@
 //!
 //! The `tokio`, `std-future` and `std` features are enabled by default.
 //!
+<<<<<<< HEAD
 //! [span]: tracing::span!
 //! [`Subscriber`]: tracing::subscriber
+||||||| 386969ba
+//! [`tracing`]: https://crates.io/crates/tracing
+//! [span]: https://docs.rs/tracing/latest/tracing/span/index.html
+//! [`Subscriber`]: https://docs.rs/tracing/latest/tracing/subscriber/index.html
+//! [`Instrument`]: trait.Instrument.html
+//! [`WithSubscriber`]: trait.WithSubscriber.html
+=======
+//! [`tracing`]: https://crates.io/crates/tracing
+//! [span]: mod@tracing::span
+//! [collector]: tracing::collect
+>>>>>>> origin/master
 //! [`futures`]: https://crates.io/crates/futures
 //!
 //! ## Supported Rust Versions
@@ -72,6 +84,7 @@
 //!
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png",
+    html_favicon_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/favicon.ico",
     issue_tracker_base_url = "https://github.com/tokio-rs/tracing/issues/"
 )]
 #![warn(
@@ -97,11 +110,25 @@
     while_true
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
+<<<<<<< HEAD
 #![cfg_attr(docsrs, feature(doc_cfg), deny(rustdoc::broken_intra_doc_links))]
+||||||| 386969ba
+#![cfg_attr(docsrs, feature(doc_cfg), deny(broken_intra_doc_links))]
+=======
+#![cfg_attr(docsrs, feature(doc_cfg))]
+>>>>>>> origin/master
 #[cfg(feature = "std-future")]
+<<<<<<< HEAD
 use pin_project_lite::pin_project;
 
 pub(crate) mod stdlib;
+||||||| 386969ba
+use pin_project::pin_project;
+
+pub(crate) mod stdlib;
+=======
+use pin_project_lite::pin_project;
+>>>>>>> origin/master
 
 #[cfg(feature = "std-future")]
 use core::{
@@ -111,7 +138,7 @@ use core::{
 };
 
 #[cfg(feature = "std")]
-use tracing::{dispatcher, Dispatch};
+use tracing::{dispatch, Dispatch};
 
 use tracing::Span;
 
@@ -198,13 +225,19 @@ pub trait Instrument: Sized {
 }
 
 /// Extension trait allowing futures, streams, and sinks to be instrumented with
-/// a `tracing` [`Subscriber`].
+/// a `tracing` [collector].
 ///
+<<<<<<< HEAD
 /// [`Subscriber`]: tracing::Subscriber
+||||||| 386969ba
+/// [`Subscriber`]: https://docs.rs/tracing/latest/tracing/subscriber/trait.Subscriber.html
+=======
+/// [collector]: tracing::collect::Collect
+>>>>>>> origin/master
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-pub trait WithSubscriber: Sized {
-    /// Attaches the provided [`Subscriber`] to this type, returning a
+pub trait WithCollector: Sized {
+    /// Attaches the provided [collector] to this type, returning a
     /// `WithDispatch` wrapper.
     ///
     /// When the wrapped type is a future, stream, or sink, the attached
@@ -212,19 +245,29 @@ pub trait WithSubscriber: Sized {
     /// When the wrapped type is an executor, the subscriber will be set as the
     /// default for any futures spawned on that executor.
     ///
+<<<<<<< HEAD
     /// [`Subscriber`]: tracing::Subscriber
     /// [default]: tracing::dispatcher#setting-the-default-subscriber
     fn with_subscriber<S>(self, subscriber: S) -> WithDispatch<Self>
+||||||| 386969ba
+    /// [`Subscriber`]: https://docs.rs/tracing/latest/tracing/subscriber/trait.Subscriber.html
+    /// [default]: https://docs.rs/tracing/latest/tracing/dispatcher/index.html#setting-the-default-subscriber
+    fn with_subscriber<S>(self, subscriber: S) -> WithDispatch<Self>
+=======
+    /// [collector]: tracing::collect::Collect
+    /// [default]: tracing::dispatch#setting-the-default-collector
+    fn with_collector<C>(self, collector: C) -> WithDispatch<Self>
+>>>>>>> origin/master
     where
-        S: Into<Dispatch>,
+        C: Into<Dispatch>,
     {
         WithDispatch {
             inner: self,
-            dispatch: subscriber.into(),
+            dispatch: collector.into(),
         }
     }
 
-    /// Attaches the current [default] [`Subscriber`] to this type, returning a
+    /// Attaches the current [default] [collector] to this type, returning a
     /// `WithDispatch` wrapper.
     ///
     /// When the wrapped type is a future, stream, or sink, the attached
@@ -235,13 +278,21 @@ pub trait WithSubscriber: Sized {
     /// This can be used to propagate the current dispatcher context when
     /// spawning a new future.
     ///
+<<<<<<< HEAD
     /// [`Subscriber`]: tracing::Subscriber
     /// [default]: tracing::dispatcher#setting-the-default-subscriber
+||||||| 386969ba
+    /// [`Subscriber`]: https://docs.rs/tracing/latest/tracing/subscriber/trait.Subscriber.html
+    /// [default]: https://docs.rs/tracing/latest/tracing/dispatcher/index.html#setting-the-default-subscriber
+=======
+    /// [collector]: tracing::collect::Collect
+    /// [default]: tracing::dispatch#setting-the-default-collector
+>>>>>>> origin/master
     #[inline]
-    fn with_current_subscriber(self) -> WithDispatch<Self> {
+    fn with_current_collector(self) -> WithDispatch<Self> {
         WithDispatch {
             inner: self,
-            dispatch: dispatcher::get_default(|default| default.clone()),
+            dispatch: dispatch::get_default(|default| default.clone()),
         }
     }
 }
@@ -336,7 +387,7 @@ impl<T: Sized> Instrument for T {}
 
 #[cfg(feature = "std-future")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std-future")))]
-impl<T: crate::stdlib::future::Future> crate::stdlib::future::Future for Instrumented<T> {
+impl<T: core::future::Future> core::future::Future for Instrumented<T> {
     type Output = T::Output;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> core::task::Poll<Self::Output> {
@@ -507,7 +558,7 @@ impl<T> Instrumented<T> {
 }
 
 #[cfg(feature = "std")]
-impl<T: Sized> WithSubscriber for T {}
+impl<T: Sized> WithCollector for T {}
 
 #[cfg(all(feature = "futures-01", feature = "std"))]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "futures-01", feature = "std"))))]
@@ -517,20 +568,20 @@ impl<T: futures_01::Future> futures_01::Future for WithDispatch<T> {
 
     fn poll(&mut self) -> futures_01::Poll<Self::Item, Self::Error> {
         let inner = &mut self.inner;
-        dispatcher::with_default(&self.dispatch, || inner.poll())
+        dispatch::with_default(&self.dispatch, || inner.poll())
     }
 }
 
 #[cfg(all(feature = "std-future", feature = "std"))]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "std-future", feature = "std"))))]
-impl<T: crate::stdlib::future::Future> crate::stdlib::future::Future for WithDispatch<T> {
+impl<T: core::future::Future> core::future::Future for WithDispatch<T> {
     type Output = T::Output;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> crate::stdlib::task::Poll<Self::Output> {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> core::task::Poll<Self::Output> {
         let this = self.project();
         let dispatch = this.dispatch;
         let future = this.inner;
-        dispatcher::with_default(dispatch, || future.poll(cx))
+        dispatch::with_default(dispatch, || future.poll(cx))
     }
 }
 
@@ -587,7 +638,7 @@ mod tests {
     #[cfg(feature = "futures-01")]
     mod futures_01_tests {
         use futures_01::{future, stream, task, Async, Future, Stream};
-        use tracing::subscriber::with_default;
+        use tracing::collect::with_default;
 
         use super::*;
 
@@ -634,6 +685,7 @@ mod tests {
 
         #[test]
         fn future_enter_exit_is_reasonable() {
+<<<<<<< HEAD
             let (subscriber, handle) = subscriber::mock()
                 .enter(expect::span().named("foo"))
                 .exit(expect::span().named("foo"))
@@ -643,8 +695,27 @@ mod tests {
                 .exit(expect::span().named("foo"))
                 .drop_span(expect::span().named("foo"))
                 .only()
+||||||| 386969ba
+            let (subscriber, handle) = subscriber::mock()
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .drop_span(span::mock().named("foo"))
+                .done()
+=======
+            let (collector, handle) = collector::mock()
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .drop_span(expect::span().named("foo"))
+                .only()
+>>>>>>> origin/master
                 .run_with_handle();
-            with_default(subscriber, || {
+            with_default(collector, || {
                 PollN::new_ok(2)
                     .instrument(tracing::trace_span!("foo"))
                     .wait()
@@ -655,6 +726,7 @@ mod tests {
 
         #[test]
         fn future_error_ends_span() {
+<<<<<<< HEAD
             let (subscriber, handle) = subscriber::mock()
                 .enter(expect::span().named("foo"))
                 .exit(expect::span().named("foo"))
@@ -664,8 +736,27 @@ mod tests {
                 .exit(expect::span().named("foo"))
                 .drop_span(expect::span().named("foo"))
                 .only()
+||||||| 386969ba
+            let (subscriber, handle) = subscriber::mock()
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .drop_span(span::mock().named("foo"))
+                .done()
+=======
+            let (collector, handle) = collector::mock()
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .drop_span(expect::span().named("foo"))
+                .only()
+>>>>>>> origin/master
                 .run_with_handle();
-            with_default(subscriber, || {
+            with_default(collector, || {
                 PollN::new_err(2)
                     .instrument(tracing::trace_span!("foo"))
                     .wait()
@@ -677,6 +768,7 @@ mod tests {
 
         #[test]
         fn stream_enter_exit_is_reasonable() {
+<<<<<<< HEAD
             let (subscriber, handle) = subscriber::mock()
                 .enter(expect::span().named("foo"))
                 .exit(expect::span().named("foo"))
@@ -689,8 +781,33 @@ mod tests {
                 .enter(expect::span().named("foo"))
                 .exit(expect::span().named("foo"))
                 .drop_span(expect::span().named("foo"))
+||||||| 386969ba
+            let (subscriber, handle) = subscriber::mock()
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .drop_span(span::mock().named("foo"))
+=======
+            let (collector, handle) = collector::mock()
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .drop_span(expect::span().named("foo"))
+>>>>>>> origin/master
                 .run_with_handle();
-            with_default(subscriber, || {
+            with_default(collector, || {
                 stream::iter_ok::<_, ()>(&[1, 2, 3])
                     .instrument(tracing::trace_span!("foo"))
                     .for_each(|_| future::ok(()))
@@ -700,6 +817,7 @@ mod tests {
             handle.assert_finished();
         }
 
+<<<<<<< HEAD
         // #[test]
         // fn span_follows_future_onto_threadpool() {
         //     let (subscriber, handle) = subscriber::mock()
@@ -729,17 +847,79 @@ mod tests {
         //     });
         //     handle.assert_finished();
         // }
+||||||| 386969ba
+        #[test]
+        fn span_follows_future_onto_threadpool() {
+            let (subscriber, handle) = subscriber::mock()
+                .enter(span::mock().named("a"))
+                .enter(span::mock().named("b"))
+                .exit(span::mock().named("b"))
+                .enter(span::mock().named("b"))
+                .exit(span::mock().named("b"))
+                .drop_span(span::mock().named("b"))
+                .exit(span::mock().named("a"))
+                .drop_span(span::mock().named("a"))
+                .done()
+                .run_with_handle();
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            with_default(subscriber, || {
+                tracing::trace_span!("a").in_scope(|| {
+                    let future = PollN::new_ok(2)
+                        .instrument(tracing::trace_span!("b"))
+                        .map(|_| {
+                            tracing::trace_span!("c").in_scope(|| {
+                                // "c" happens _outside_ of the instrumented future's
+                                // span, so we don't expect it.
+                            })
+                        });
+                    runtime.block_on(Box::new(future)).unwrap();
+                })
+            });
+            handle.assert_finished();
+        }
+=======
+        // #[test]
+        // fn span_follows_future_onto_threadpool() {
+        //     let (collector, handle) = collector::mock()
+        //         .enter(span::mock().named("a"))
+        //         .enter(span::mock().named("b"))
+        //         .exit(span::mock().named("b"))
+        //         .enter(span::mock().named("b"))
+        //         .exit(span::mock().named("b"))
+        //         .drop_span(span::mock().named("b"))
+        //         .exit(span::mock().named("a"))
+        //         .drop_span(span::mock().named("a"))
+        //         .only()
+        //         .run_with_handle();
+        //     let mut runtime = tokio::runtime::Runtime::new().unwrap();
+        //     with_default(collector, || {
+        //         tracing::trace_span!("a").in_scope(|| {
+        //             let future = PollN::new_ok(2)
+        //                 .instrument(tracing::trace_span!("b"))
+        //                 .map(|_| {
+        //                     tracing::trace_span!("c").in_scope(|| {
+        //                         // "c" happens _outside_ of the instrumented future's
+        //                         // span, so we don't expect it.
+        //                     })
+        //                 });
+        //             runtime.block_on(Box::new(future)).unwrap();
+        //         })
+        //     });
+        //     handle.assert_finished();
+        // }
+>>>>>>> origin/master
     }
 
     #[cfg(all(feature = "futures-03", feature = "std-future"))]
     mod futures_03_tests {
         use futures::{future, sink, stream, FutureExt, SinkExt, StreamExt};
-        use tracing::subscriber::with_default;
+        use tracing::collect::with_default;
 
         use super::*;
 
         #[test]
         fn stream_enter_exit_is_reasonable() {
+<<<<<<< HEAD
             let (subscriber, handle) = subscriber::mock()
                 .enter(expect::span().named("foo"))
                 .exit(expect::span().named("foo"))
@@ -750,8 +930,31 @@ mod tests {
                 .enter(expect::span().named("foo"))
                 .exit(expect::span().named("foo"))
                 .drop_span(expect::span().named("foo"))
+||||||| 386969ba
+            let (subscriber, handle) = subscriber::mock()
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .drop_span(span::mock().named("foo"))
+=======
+            let (collector, handle) = collector::mock()
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .drop_span(expect::span().named("foo"))
+>>>>>>> origin/master
                 .run_with_handle();
-            with_default(subscriber, || {
+            with_default(collector, || {
                 Instrument::instrument(stream::iter(&[1, 2, 3]), tracing::trace_span!("foo"))
                     .for_each(|_| future::ready(()))
                     .now_or_never()
@@ -762,6 +965,7 @@ mod tests {
 
         #[test]
         fn sink_enter_exit_is_reasonable() {
+<<<<<<< HEAD
             let (subscriber, handle) = subscriber::mock()
                 .enter(expect::span().named("foo"))
                 .exit(expect::span().named("foo"))
@@ -770,8 +974,27 @@ mod tests {
                 .enter(expect::span().named("foo"))
                 .exit(expect::span().named("foo"))
                 .drop_span(expect::span().named("foo"))
+||||||| 386969ba
+            let (subscriber, handle) = subscriber::mock()
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .enter(span::mock().named("foo"))
+                .exit(span::mock().named("foo"))
+                .drop_span(span::mock().named("foo"))
+=======
+            let (collector, handle) = collector::mock()
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .enter(expect::span().named("foo"))
+                .exit(expect::span().named("foo"))
+                .drop_span(expect::span().named("foo"))
+>>>>>>> origin/master
                 .run_with_handle();
-            with_default(subscriber, || {
+            with_default(collector, || {
                 Instrument::instrument(sink::drain(), tracing::trace_span!("foo"))
                     .send(1u8)
                     .now_or_never()

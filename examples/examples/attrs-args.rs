@@ -1,3 +1,5 @@
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
 #![deny(rust_2018_idioms)]
 
 use tracing::{debug, info};
@@ -27,11 +29,11 @@ fn fibonacci_seq(to: u64) -> Vec<u64> {
 }
 
 fn main() {
-    let subscriber = tracing_subscriber::fmt()
+    let collector = tracing_subscriber::fmt()
         .with_env_filter("attrs_args=trace")
         .finish();
 
-    tracing::subscriber::with_default(subscriber, || {
+    tracing::collect::with_default(collector, || {
         let n = 5;
         let sequence = fibonacci_seq(n);
         info!("The first {} fibonacci numbers are {:?}", n, sequence);

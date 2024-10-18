@@ -1,14 +1,30 @@
+<<<<<<< HEAD
 #![cfg(feature = "env-filter")]
 
 use tracing::{self, subscriber::with_default, Level};
 use tracing_mock::*;
+||||||| 386969ba
+mod support;
+use self::support::*;
+use tracing::{self, subscriber::with_default, Level};
+=======
+#![cfg(feature = "env-filter")]
+
+use tracing::{self, collect::with_default, Level};
+use tracing_mock::*;
+>>>>>>> origin/master
 use tracing_subscriber::{filter::EnvFilter, prelude::*};
 
 #[test]
+<<<<<<< HEAD
 #[cfg_attr(not(flaky_tests), ignore)]
+||||||| 386969ba
+=======
+#[ignore] // flaky, use `cargo test -- --ignored` or `--include-ignored` to run
+>>>>>>> origin/master
 fn field_filter_events() {
     let filter: EnvFilter = "[{thing}]=debug".parse().expect("filter should parse");
-    let (subscriber, finished) = subscriber::mock()
+    let (subscriber, finished) = collector::mock()
         .event(
             expect::event()
                 .at_level(Level::INFO)
@@ -35,13 +51,26 @@ fn field_filter_events() {
 }
 
 #[test]
+<<<<<<< HEAD
 #[cfg_attr(not(flaky_tests), ignore)]
+||||||| 386969ba
+=======
+#[ignore] // flaky, use `cargo test -- --ignored` or `--include-ignored` to run
+>>>>>>> origin/master
 fn field_filter_spans() {
     let filter: EnvFilter = "[{enabled=true}]=debug"
         .parse()
         .expect("filter should parse");
+<<<<<<< HEAD
     let (subscriber, finished) = subscriber::mock()
         .enter(expect::span().named("span1"))
+||||||| 386969ba
+    let (subscriber, finished) = subscriber::mock()
+        .enter(span::mock().named("span1"))
+=======
+    let (subscriber, finished) = collector::mock()
+        .enter(expect::span().named("span1"))
+>>>>>>> origin/master
         .event(
             expect::event()
                 .at_level(Level::INFO)
@@ -83,9 +112,19 @@ fn record_after_created() {
     let filter: EnvFilter = "[{enabled=true}]=debug"
         .parse()
         .expect("filter should parse");
+<<<<<<< HEAD
     let (subscriber, finished) = subscriber::mock()
         .enter(expect::span().named("span"))
         .exit(expect::span().named("span"))
+||||||| 386969ba
+    let (subscriber, finished) = subscriber::mock()
+        .enter(span::mock().named("span"))
+        .exit(span::mock().named("span"))
+=======
+    let (subscriber, finished) = collector::mock()
+        .enter(expect::span().named("span"))
+        .exit(expect::span().named("span"))
+>>>>>>> origin/master
         .record(
             expect::span().named("span"),
             expect::field("enabled").with_value(&true),

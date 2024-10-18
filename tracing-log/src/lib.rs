@@ -30,7 +30,7 @@
 //! use tracing_log::LogTracer;
 //! use log;
 //!
-//! # fn main() -> Result<(), Box<Error>> {
+//! # fn main() -> Result<(), Box<dyn Error>> {
 //! LogTracer::init()?;
 //!
 //! // will be available for Subscribers as a tracing Event
@@ -55,19 +55,41 @@
 //!
 //! ## Caution: Mixing both conversions
 //!
+<<<<<<< HEAD
 //! Note that `log::Logger` implementations that convert log records to trace events
 //! should not be used with `Subscriber`s that convert trace events _back_ into
 //! `log` records, as doing so will result in the event recursing between the subscriber
 //! and the logger forever (or, in real life, probably overflowing the call stack).
+||||||| 386969ba
+//! Note that logger implementations that convert log records to trace events
+//! should not be used with `Subscriber`s that convert trace events _back_ into
+//! log records (such as the `TraceLogger`), as doing so will result in the
+//! event recursing between the subscriber and the logger forever (or, in real
+//! life, probably overflowing the call stack).
+=======
+//! Note that logger implementations that convert log records to trace events
+//! should not be used with `Collector`s that convert trace events _back_ into
+//! log records, as doing so will result in the event recursing between the
+//! collector and the logger forever (or, in real life, probably overflowing
+//! the call stack).
+>>>>>>> origin/master
 //!
 //! If the logging of trace events generated from log records produced by the
 //! `log` crate is desired, either the `log` crate should not be used to
-//! implement this logging, or an additional layer of filtering will be
+//! implement this logging, or an additional subscriber of filtering will be
 //! required to avoid infinitely converting between `Event` and `log::Record`.
 //!
+<<<<<<< HEAD
 //! ## Feature Flags
 //!
 //! * `std`: enables features that require the Rust standard library (on by default)
+||||||| 386969ba
+//! # Feature Flags
+//! * `trace-logger`: enables an experimental `log` subscriber, deprecated since
+//!   version 0.1.1.
+=======
+//! # Feature Flags
+>>>>>>> origin/master
 //! * `log-tracer`: enables the `LogTracer` type (on by default)
 //! * `interest-cache`: makes it possible to configure an interest cache for
 //!   logs emitted through the `log` crate (see [`Builder::with_interest_cache`]); requires `std`
@@ -86,19 +108,60 @@
 //! supported compiler version is not considered a semver breaking change as
 //! long as doing so complies with this policy.
 //!
+<<<<<<< HEAD
 //! [`init`]: LogTracer::init
 //! [`init_with_filter`]: LogTracer::init_with_filter
+||||||| 386969ba
+//! [`init`]: struct.LogTracer.html#method.init
+//! [`init_with_filter`]: struct.LogTracer.html#method.init_with_filter
+//! [`AsTrace`]: trait.AsTrace.html
+//! [`AsLog`]: trait.AsLog.html
+//! [`LogTracer`]: struct.LogTracer.html
+//! [`TraceLogger`]: struct.TraceLogger.html
+//! [`env_logger`]: env_logger/index.html
+=======
+//! [`init`]: LogTracer::init()
+//! [`init_with_filter`]: LogTracer::init_with_filter()
+>>>>>>> origin/master
 //! [`tracing`]: https://crates.io/crates/tracing
+<<<<<<< HEAD
 //! [`tracing::Subscriber`]: https://docs.rs/tracing/latest/tracing/trait.Subscriber.html
 //! [`Subscriber`]: https://docs.rs/tracing/latest/tracing/trait.Subscriber.html
 //! [`tracing::Event`]: https://docs.rs/tracing/latest/tracing/struct.Event.html
+||||||| 386969ba
+//! [`log`]: https://crates.io/crates/log
+//! [`env_logger` crate]: https://crates.io/crates/env-logger
+//! [`log::Log`]: https://docs.rs/log/latest/log/trait.Log.html
+//! [`log::Record`]: https://docs.rs/log/latest/log/struct.Record.html
+//! [`tracing::Subscriber`]: https://docs.rs/tracing/latest/tracing/trait.Subscriber.html
+//! [`Subscriber`]: https://docs.rs/tracing/latest/tracing/trait.Subscriber.html
+//! [`tracing::Event`]: https://docs.rs/tracing/latest/tracing/struct.Event.html
+=======
+//! [`log`]: https://crates.io/crates/log
+//! [`env_logger` crate]: https://crates.io/crates/env-logger
+//! [`tracing::Collector`]: tracing::Collect
+//! [`tracing::Event`]: tracing_core::Event
+//! [`Collect`]: tracing::Collect
+>>>>>>> origin/master
 //! [flags]: https://docs.rs/tracing/latest/tracing/#crate-feature-flags
+<<<<<<< HEAD
 //! [`Builder::with_interest_cache`]: log_tracer::Builder::with_interest_cache
+||||||| 386969ba
+#![doc(html_root_url = "https://docs.rs/tracing-log/0.1.1")]
+=======
+>>>>>>> origin/master
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png",
+    html_favicon_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/favicon.ico",
     issue_tracker_base_url = "https://github.com/tokio-rs/tracing/issues/"
 )]
+<<<<<<< HEAD
 #![cfg_attr(docsrs, feature(doc_cfg), deny(rustdoc::broken_intra_doc_links))]
+||||||| 386969ba
+#![cfg_attr(docsrs, feature(doc_cfg), deny(broken_intra_doc_links))]
+=======
+#![cfg_attr(docsrs, feature(doc_cfg))]
+>>>>>>> origin/master
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -127,11 +190,11 @@ use std::{fmt, io};
 
 use tracing_core::{
     callsite::{self, Callsite},
-    dispatcher,
+    collect, dispatch,
     field::{self, Field, Visit},
     identify_callsite,
     metadata::{Kind, Level},
-    subscriber, Event, Metadata,
+    Event, Metadata,
 };
 
 #[cfg(feature = "log-tracer")]
@@ -143,6 +206,28 @@ pub mod log_tracer;
 #[doc(inline)]
 pub use self::log_tracer::LogTracer;
 
+<<<<<<< HEAD
+||||||| 386969ba
+#[cfg(feature = "trace-logger")]
+#[cfg_attr(docsrs, doc(cfg(feature = "trace-logger")))]
+#[deprecated(
+    since = "0.1.1",
+    note = "use the `tracing` crate's \"log\" feature flag instead"
+)]
+#[allow(deprecated)]
+#[doc(inline)]
+pub use self::trace_logger::TraceLogger;
+
+#[cfg(feature = "env_logger")]
+#[cfg_attr(docsrs, doc(cfg(feature = "env_logger")))]
+pub mod env_logger;
+
+=======
+#[cfg(feature = "env_logger")]
+#[cfg_attr(docsrs, doc(cfg(feature = "env_logger")))]
+pub mod env_logger;
+
+>>>>>>> origin/master
 pub use log;
 
 #[cfg(all(feature = "interest-cache", feature = "log-tracer", feature = "std"))]
@@ -161,6 +246,7 @@ pub fn format_trace(record: &log::Record<'_>) -> io::Result<()> {
     Ok(())
 }
 
+<<<<<<< HEAD
 // XXX(eliza): this is factored out so that we don't have to deal with the pub
 // function `format_trace`'s `Result` return type...maybe we should get rid of
 // that in 0.2...
@@ -194,6 +280,42 @@ pub(crate) fn dispatch_record(record: &log::Record<'_>) {
     });
 }
 
+||||||| 386969ba
+=======
+// XXX(eliza): this is factored out so that we don't have to deal with the pub
+// function `format_trace`'s `Result` return type...maybe we should get rid of
+// that in 0.2...
+pub(crate) fn dispatch_record(record: &log::Record<'_>) {
+    dispatch::get_default(|dispatch| {
+        let filter_meta = record.as_trace();
+        if !dispatch.enabled(&filter_meta) {
+            return;
+        }
+
+        let (_, keys, meta) = loglevel_to_cs(record.level());
+
+        let log_module = record.module_path();
+        let log_file = record.file();
+        let log_line = record.line();
+
+        let module = log_module.as_ref().map(|s| s as &dyn field::Value);
+        let file = log_file.as_ref().map(|s| s as &dyn field::Value);
+        let line = log_line.as_ref().map(|s| s as &dyn field::Value);
+
+        dispatch.event(&Event::new(
+            meta,
+            &meta.fields().value_set(&[
+                (&keys.message, Some(record.args() as &dyn field::Value)),
+                (&keys.target, Some(&record.target())),
+                (&keys.module, module),
+                (&keys.file, file),
+                (&keys.line, line),
+            ]),
+        ));
+    });
+}
+
+>>>>>>> origin/master
 /// Trait implemented for `tracing` types that can be converted to a `log`
 /// equivalent.
 pub trait AsLog: crate::sealed::Sealed {
@@ -291,8 +413,16 @@ macro_rules! log_cs {
             Kind::EVENT,
         );
 
+<<<<<<< HEAD
         impl callsite::Callsite for $ty {
             fn set_interest(&self, _: subscriber::Interest) {}
+||||||| 386969ba
+        impl callsite::Callsite for Callsite {
+            fn set_interest(&self, _: subscriber::Interest) {}
+=======
+        impl callsite::Callsite for $ty {
+            fn set_interest(&self, _: collect::Interest) {}
+>>>>>>> origin/master
             fn metadata(&self) -> &'static Metadata<'static> {
                 &$meta
             }
@@ -448,7 +578,7 @@ impl AsLog for tracing_core::LevelFilter {
 /// that only lives as long as its source `Event`, but provides complete
 /// data.
 ///
-/// It can typically be used by `Subscriber`s when processing an `Event`,
+/// It can typically be used by collectors when processing an `Event`,
 /// to allow accessing its complete metadata in a consistent way,
 /// regardless of the source of its source.
 ///

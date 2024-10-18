@@ -1,7 +1,13 @@
 use std::sync::{Arc, Mutex};
-use tracing::subscriber::with_default;
+use tracing::collect::with_default;
 use tracing_core::span::{Attributes, Record};
+<<<<<<< HEAD
 use tracing_core::{span, Event, Level, LevelFilter, Metadata, Subscriber};
+||||||| 386969ba
+use tracing_core::{span, Event, Level, Metadata, Subscriber};
+=======
+use tracing_core::{span, Collect, Event, Level, LevelFilter, Metadata};
+>>>>>>> origin/master
 use tracing_log::{LogTracer, NormalizeEvent};
 
 struct State {
@@ -20,9 +26,18 @@ struct OwnedMetadata {
 
 struct TestSubscriber(Arc<State>);
 
+<<<<<<< HEAD
 impl Subscriber for TestSubscriber {
     fn enabled(&self, meta: &Metadata<'_>) -> bool {
         dbg!(meta);
+||||||| 386969ba
+impl Subscriber for TestSubscriber {
+    fn enabled(&self, _: &Metadata<'_>) -> bool {
+=======
+impl Collect for TestSubscriber {
+    fn enabled(&self, meta: &Metadata<'_>) -> bool {
+        dbg!(meta);
+>>>>>>> origin/master
         true
     }
 
@@ -56,6 +71,10 @@ impl Subscriber for TestSubscriber {
     fn enter(&self, _span: &span::Id) {}
 
     fn exit(&self, _span: &span::Id) {}
+
+    fn current_span(&self) -> span::Current {
+        span::Current::unknown()
+    }
 }
 
 #[test]

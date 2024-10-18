@@ -31,15 +31,24 @@
 use super::time::{FormatTime, SystemTime};
 use crate::{
     field::{MakeOutput, MakeVisitor, RecordFields, VisitFmt, VisitOutput},
-    fmt::fmt_layer::FmtContext,
-    fmt::fmt_layer::FormattedFields,
+    fmt::fmt_subscriber::{FmtContext, FormattedFields},
     registry::LookupSpan,
+    registry::Scope,
 };
 
+<<<<<<< HEAD
 use std::fmt::{self, Debug, Display, Write};
+||||||| 386969ba
+use std::{
+    fmt::{self, Write},
+    iter,
+};
+=======
+use std::{fmt, marker::PhantomData};
+>>>>>>> origin/master
 use tracing_core::{
     field::{self, Field, Visit},
-    span, Event, Level, Subscriber,
+    span, Collect, Event, Level,
 };
 
 #[cfg(feature = "tracing-log")]
@@ -54,6 +63,7 @@ mod json;
 #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
 pub use json::*;
 
+<<<<<<< HEAD
 #[cfg(feature = "ansi")]
 mod pretty;
 #[cfg(feature = "ansi")]
@@ -61,15 +71,40 @@ mod pretty;
 pub use pretty::*;
 
 /// A type that can format a tracing [`Event`] to a [`Writer`].
+||||||| 386969ba
+/// A type that can format a tracing `Event` for a `fmt::Write`.
+=======
+#[cfg(feature = "ansi")]
+mod pretty;
+#[cfg(feature = "ansi")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ansi")))]
+pub use pretty::*;
+
+use fmt::{Debug, Display};
+
+/// A type that can format a tracing [`Event`] to a [`Writer`].
+>>>>>>> origin/master
 ///
+<<<<<<< HEAD
 /// `FormatEvent` is primarily used in the context of [`fmt::Subscriber`] or
 /// [`fmt::Layer`]. Each time an event is dispatched to [`fmt::Subscriber`] or
 /// [`fmt::Layer`], the subscriber or layer
 /// forwards it to its associated `FormatEvent` to emit a log message.
+||||||| 386969ba
+/// `FormatEvent` is primarily used in the context of [`fmt::Subscriber`] or [`fmt::Layer`]. Each time an event is
+/// dispatched to [`fmt::Subscriber`] or [`fmt::Layer`], the subscriber or layer forwards it to
+/// its associated `FormatEvent` to emit a log message.
+=======
+/// `FormatEvent` is primarily used in the context of [`fmt::Collector`] or
+/// [`fmt::Subscriber`]. Each time an event is dispatched to [`fmt::Collector`]
+/// or [`fmt::Subscriber`], the collector or subscriber forwards it to its
+/// associated `FormatEvent` to emit a log message.
+>>>>>>> origin/master
 ///
 /// This trait is already implemented for function pointers with the same
 /// signature as `format_event`.
 ///
+<<<<<<< HEAD
 /// # Arguments
 ///
 /// The following arguments are passed to `FormatEvent::format_event`:
@@ -193,29 +228,182 @@ pub use pretty::*;
 /// [`owo-colors`]: https://crates.io/crates/owo-colors
 /// [default formatter]: Full
 pub trait FormatEvent<S, N>
+||||||| 386969ba
+/// [`fmt::Subscriber`]: ../struct.Subscriber.html
+/// [`fmt::Layer`]: ../struct.Layer.html
+pub trait FormatEvent<S, N>
+=======
+/// # Arguments
+///
+/// The following arguments are passed to `FormatEvent::format_event`:
+///
+/// * A [`FmtContext`]. This is an extension of the [`subscribe::Context`] type,
+///   which can be used for accessing stored information such as the current
+///   span context an event occurred in.
+///
+///   In addition, [`FmtContext`] exposes access to the [`FormatFields`]
+///   implementation that the subscriber was configured to use via the
+///   [`FmtContext::field_format`] method. This can be used when the
+///   [`FormatEvent`] implementation needs to format the event's fields.
+///
+///   For convenience, [`FmtContext`] also [implements `FormatFields`],
+///   forwarding to the configured [`FormatFields`] type.
+///
+/// * A [`Writer`] to which the formatted representation of the event is
+///   written. This type implements the [`std::fmt::Write`] trait, and therefore
+///   can be used with the [`std::write!`] and [`std::writeln!`] macros, as well
+///   as calling [`std::fmt::Write`] methods directly.
+///
+///   The [`Writer`] type also implements additional methods that provide
+///   information about how the event should be formatted. The
+///   [`Writer::has_ansi_escapes`] method indicates whether [ANSI terminal
+///   escape codes] are supported by the underlying I/O writer that the event
+///   will be written to. If this returns `true`, the formatter is permitted to
+///   use ANSI escape codes to add colors and other text formatting to its
+///   output. If it returns `false`, the event will be written to an output that
+///   does not support ANSI escape codes (such as a log file), and they should
+///   not be emitted.
+///
+///   Crates like [`nu_ansi_term`] and [`owo-colors`] can be used to add ANSI
+///   escape codes to formatted output.
+///
+/// * The actual [`Event`] to be formatted.
+///
+/// # Examples
+///
+/// This example re-implements a simiplified version of this crate's [default
+/// formatter]:
+///
+/// ```rust
+/// use std::fmt;
+/// use tracing_core::{Collect, Event};
+/// use tracing_subscriber::fmt::{
+///     format::{self, FormatEvent, FormatFields},
+///     FmtContext,
+///     FormattedFields,
+/// };
+/// use tracing_subscriber::registry::LookupSpan;
+///
+/// struct MyFormatter;
+///
+/// impl<C, N> FormatEvent<C, N> for MyFormatter
+/// where
+///     C: Collect + for<'a> LookupSpan<'a>,
+///     N: for<'a> FormatFields<'a> + 'static,
+/// {
+///     fn format_event(
+///         &self,
+///         ctx: &FmtContext<'_, C, N>,
+///         mut writer: format::Writer<'_>,
+///         event: &Event<'_>,
+///     ) -> fmt::Result {
+///         // Format values from the event's's metadata:
+///         let metadata = event.metadata();
+///         write!(&mut writer, "{} {}: ", metadata.level(), metadata.target())?;
+///
+///         // Format all the spans in the event's span context.
+///         if let Some(scope) = ctx.event_scope() {
+///             for span in scope.from_root() {
+///                 write!(writer, "{}", span.name())?;
+///
+///                 // `FormattedFields` is a formatted representation of the span's
+///                 // fields, which is stored in its extensions by the `fmt` layer's
+///                 // `new_span` method. The fields will have been formatted
+///                 // by the same field formatter that's provided to the event
+///                 // formatter in the `FmtContext`.
+///                 let ext = span.extensions();
+///                 let fields = &ext
+///                     .get::<FormattedFields<N>>()
+///                     .expect("will never be `None`");
+///
+///                 // Skip formatting the fields if the span had no fields.
+///                 if !fields.is_empty() {
+///                     write!(writer, "{{{}}}", fields)?;
+///                 }
+///                 write!(writer, ": ")?;
+///             }
+///         }
+///
+///         // Write fields on the event
+///         ctx.field_format().format_fields(writer.by_ref(), event)?;
+///
+///         writeln!(writer)
+///     }
+/// }
+///
+/// let _subscriber = tracing_subscriber::fmt()
+///     .event_format(MyFormatter)
+///     .init();
+///
+/// let _span = tracing::info_span!("my_span", answer = 42).entered();
+/// tracing::info!(question = "life, the universe, and everything", "hello world");
+/// ```
+///
+/// This formatter will print events like this:
+///
+/// ```text
+/// DEBUG yak_shaving::shaver: some-span{field-on-span=foo}: started shaving yak
+/// ```
+///
+/// [`fmt::Collector`]: super::Collector
+/// [`fmt::Subscriber`]: super::Subscriber
+/// [`subscribe::Context`]: crate::subscribe::Context
+/// [`Event`]: tracing::Event
+/// [implements `FormatFields`]: super::FmtContext#impl-FormatFields<'writer>
+/// [ANSI terminal escape codes]: https://en.wikipedia.org/wiki/ANSI_escape_code
+/// [`Writer::has_ansi_escapes`]: Writer::has_ansi_escapes
+/// [`nu_ansi_term`]: https://crates.io/crates/nu_ansi_term
+/// [`owo-colors`]: https://crates.io/crates/owo-colors
+/// [default formatter]: Full
+pub trait FormatEvent<C, N>
+>>>>>>> origin/master
 where
-    S: Subscriber + for<'a> LookupSpan<'a>,
+    C: Collect + for<'a> LookupSpan<'a>,
     N: for<'a> FormatFields<'a> + 'static,
 {
     /// Write a log message for `Event` in `Context` to the given [`Writer`].
     fn format_event(
         &self,
+<<<<<<< HEAD
         ctx: &FmtContext<'_, S, N>,
         writer: Writer<'_>,
+||||||| 386969ba
+        ctx: &FmtContext<'_, S, N>,
+        writer: &mut dyn fmt::Write,
+=======
+        ctx: &FmtContext<'_, C, N>,
+        writer: Writer<'_>,
+>>>>>>> origin/master
         event: &Event<'_>,
     ) -> fmt::Result;
 }
 
+<<<<<<< HEAD
 impl<S, N> FormatEvent<S, N>
     for fn(ctx: &FmtContext<'_, S, N>, Writer<'_>, &Event<'_>) -> fmt::Result
+||||||| 386969ba
+impl<S, N> FormatEvent<S, N>
+    for fn(ctx: &FmtContext<'_, S, N>, &mut dyn fmt::Write, &Event<'_>) -> fmt::Result
+=======
+impl<C, N> FormatEvent<C, N>
+    for fn(ctx: &FmtContext<'_, C, N>, Writer<'_>, &Event<'_>) -> fmt::Result
+>>>>>>> origin/master
 where
-    S: Subscriber + for<'a> LookupSpan<'a>,
+    C: Collect + for<'a> LookupSpan<'a>,
     N: for<'a> FormatFields<'a> + 'static,
 {
     fn format_event(
         &self,
+<<<<<<< HEAD
         ctx: &FmtContext<'_, S, N>,
         writer: Writer<'_>,
+||||||| 386969ba
+        ctx: &FmtContext<'_, S, N>,
+        writer: &mut dyn fmt::Write,
+=======
+        ctx: &FmtContext<'_, C, N>,
+        writer: Writer<'_>,
+>>>>>>> origin/master
         event: &Event<'_>,
     ) -> fmt::Result {
         (*self)(ctx, writer, event)
@@ -223,12 +411,20 @@ where
 }
 /// A type that can format a [set of fields] to a [`Writer`].
 ///
-/// `FormatFields` is primarily used in the context of [`FmtSubscriber`]. Each
+/// `FormatFields` is primarily used in the context of [`fmt::Subscriber`]. Each
 /// time a span or event with fields is recorded, the subscriber will format
 /// those fields with its associated `FormatFields` implementation.
 ///
+<<<<<<< HEAD
 /// [set of fields]: crate::field::RecordFields
 /// [`FmtSubscriber`]: super::Subscriber
+||||||| 386969ba
+/// [set of fields]: ../field/trait.RecordFields.html
+/// [`FmtSubscriber`]: ../fmt/struct.Subscriber.html
+=======
+/// [set of fields]: RecordFields
+/// [`fmt::Subscriber`]: super::Subscriber
+>>>>>>> origin/master
 pub trait FormatFields<'writer> {
     /// Format the provided `fields` to the provided [`Writer`], returning a result.
     fn format_fields<R: RecordFields>(&self, writer: Writer<'writer>, fields: R) -> fmt::Result;
@@ -267,11 +463,14 @@ pub trait FormatFields<'writer> {
 ///     .event_format(format)
 ///     .init();
 /// ```
+/// [event formatter]: FormatEvent
 pub fn format() -> Format {
     Format::default()
 }
 
 /// Returns the default configuration for a JSON [event formatter].
+///
+/// [event formatter]: FormatEvent
 #[cfg(feature = "json")]
 #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
 pub fn json() -> Format<Json> {
@@ -325,6 +524,7 @@ pub struct FieldFnVisitor<'a, F> {
 }
 /// Marker for [`Format`] that indicates that the compact log format should be used.
 ///
+<<<<<<< HEAD
 /// The compact format includes fields from all currently entered spans, after
 /// the event's fields. Span fields are ordered (but not grouped) by
 /// span, and span names are  not shown. A more compact representation of the
@@ -354,6 +554,38 @@ pub struct FieldFnVisitor<'a, F> {
 /// <font color="#AAAAAA">2022-02-17T19:51:05.809768Z </font><font color="#4E9A06"> INFO</font> <b>fmt_compact</b><font color="#AAAAAA">: yak shaving completed </font><i>all_yaks_shaved</i><font color="#AAAAAA">=false</font>
 ///
 /// </pre>
+||||||| 386969ba
+/// The compact format only includes the fields from the most recently entered span.
+=======
+/// The compact format includes fields from all currently entered spans, after
+/// the event's fields. Span fields are ordered (but not grouped) grouped by
+/// span, and span names are  not shown.A more compact representation of the
+/// event's [`Level`] is used, and additional information, such as the event's
+/// target, is disabled by default (but can be enabled explicitly).
+///
+/// # Example Output
+///
+/// <pre><font color="#4E9A06"><b>:;</b></font> <font color="#4E9A06">cargo</font> run --example fmt-compact
+/// <font color="#4E9A06"><b>    Finished</b></font> dev [unoptimized + debuginfo] target(s) in 0.08s
+/// <font color="#4E9A06"><b>     Running</b></font> `target/debug/examples/fmt-compact`
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579731Z </font><font color="#4E9A06">i</font> preparing to shave yaks <i>number_of_yaks</i><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579802Z </font><font color="#4E9A06">i</font> shaving yaks <font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579836Z </font><font color="#75507B">.</font> hello! I&apos;m gonna shave a yak <i>excitement</i><font color="#AAAAAA">=&quot;yay!&quot; </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3 </font><font color="#AAAAAA"><i>yak</i></font><font color="#AAAAAA">=1</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579861Z </font><font color="#75507B">.</font> yak shaved successfully <font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3 </font><font color="#AAAAAA"><i>yak</i></font><font color="#AAAAAA">=1</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579887Z </font><font color="#3465A4">:</font> <i>yak</i><font color="#AAAAAA">=1 </font><i>shaved</i><font color="#AAAAAA">=true </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579904Z </font><font color="#75507B">.</font> <i>yaks_shaved</i><font color="#AAAAAA">=1 </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579926Z </font><font color="#75507B">.</font> hello! I&apos;m gonna shave a yak <i>excitement</i><font color="#AAAAAA">=&quot;yay!&quot; </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3 </font><font color="#AAAAAA"><i>yak</i></font><font color="#AAAAAA">=2</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579941Z </font><font color="#75507B">.</font> yak shaved successfully <font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3 </font><font color="#AAAAAA"><i>yak</i></font><font color="#AAAAAA">=2</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579959Z </font><font color="#3465A4">:</font> <i>yak</i><font color="#AAAAAA">=2 </font><i>shaved</i><font color="#AAAAAA">=true </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579973Z </font><font color="#75507B">.</font> <i>yaks_shaved</i><font color="#AAAAAA">=2 </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.579994Z </font><font color="#75507B">.</font> hello! I&apos;m gonna shave a yak <i>excitement</i><font color="#AAAAAA">=&quot;yay!&quot; </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3 </font><font color="#AAAAAA"><i>yak</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.580013Z </font><font color="#C4A000">!</font> could not locate yak <font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3 </font><font color="#AAAAAA"><i>yak</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.580032Z </font><font color="#3465A4">:</font> <i>yak</i><font color="#AAAAAA">=3 </font><i>shaved</i><font color="#AAAAAA">=false </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.580050Z </font><font color="#CC0000">X</font> failed to shave yak <i>yak</i><font color="#AAAAAA">=3 </font><i>error</i><font color="#AAAAAA">=missing yak </font><i>error.sources</i><font color="#AAAAAA">=[out of space, out of cash] </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.580067Z </font><font color="#75507B">.</font> <i>yaks_shaved</i><font color="#AAAAAA">=2 </font><font color="#AAAAAA"><i>yaks</i></font><font color="#AAAAAA">=3</font>
+/// <font color="#AAAAAA">2022-02-15T18:43:54.580085Z </font><font color="#4E9A06">i</font> yak shaving completed <i>all_yaks_shaved</i><font color="#AAAAAA">=false</font>
+/// </pre>
+>>>>>>> origin/master
 #[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Compact;
 
@@ -612,8 +844,15 @@ impl<F, T> Format<F, T> {
             format: Compact,
             timer: self.timer,
             ansi: self.ansi,
+<<<<<<< HEAD
             display_target: self.display_target,
             display_timestamp: self.display_timestamp,
+||||||| 386969ba
+            display_target: self.display_target,
+=======
+            display_target: false,
+            display_timestamp: self.display_timestamp,
+>>>>>>> origin/master
             display_level: self.display_level,
             display_thread_id: self.display_thread_id,
             display_thread_name: self.display_thread_name,
@@ -674,7 +913,15 @@ impl<F, T> Format<F, T> {
     /// # Options
     ///
     /// - [`Format::flatten_event`] can be used to enable flattening event fields into the root
+<<<<<<< HEAD
     /// object.
+||||||| 386969ba
+    /// object.
+    ///
+    /// [`Format::flatten_event`]: #method.flatten_event
+=======
+    ///   object.
+>>>>>>> origin/master
     #[cfg(feature = "json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
     pub fn json(self) -> Format<Json, T> {
@@ -782,6 +1029,7 @@ impl<F, T> Format<F, T> {
             ..self
         }
     }
+<<<<<<< HEAD
 
     /// Sets whether or not an event's [source code file path][file] is
     /// displayed.
@@ -852,6 +1100,100 @@ impl<F, T> Format<F, T> {
         }
         writer.write_char(' ')
     }
+||||||| 386969ba
+=======
+
+    /// Sets whether or not an event's [source code file path][file] is
+    /// displayed.
+    ///
+    /// [file]: tracing_core::Metadata::file
+    pub fn with_file(self, display_filename: bool) -> Format<F, T> {
+        Format {
+            display_filename,
+            ..self
+        }
+    }
+
+    /// Sets whether or not an event's [source code line number][line] is
+    /// displayed.
+    ///
+    /// [line]: tracing_core::Metadata::line
+    pub fn with_line_number(self, display_line_number: bool) -> Format<F, T> {
+        Format {
+            display_line_number,
+            ..self
+        }
+    }
+
+    /// Sets whether or not the source code location from which an event
+    /// originated is displayed.
+    ///
+    /// This is equivalent to calling [`Format::with_file`] and
+    /// [`Format::with_line_number`] with the same value.
+    pub fn with_source_location(self, display_location: bool) -> Self {
+        self.with_line_number(display_location)
+            .with_file(display_location)
+    }
+
+    fn format_level(&self, level: Level, writer: &mut Writer<'_>) -> fmt::Result
+    where
+        F: LevelNames,
+    {
+        if self.display_level {
+            let fmt_level = {
+                #[cfg(feature = "ansi")]
+                {
+                    F::format_level(level, writer.has_ansi_escapes())
+                }
+                #[cfg(not(feature = "ansi"))]
+                {
+                    F::format_level(level)
+                }
+            };
+            return write!(writer, "{} ", fmt_level);
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn format_timestamp(&self, writer: &mut Writer<'_>) -> fmt::Result
+    where
+        T: FormatTime,
+    {
+        // If timestamps are disabled, do nothing.
+        if !self.display_timestamp {
+            return Ok(());
+        }
+
+        // If ANSI color codes are enabled, format the timestamp with ANSI
+        // colors.
+        #[cfg(feature = "ansi")]
+        {
+            if writer.has_ansi_escapes() {
+                let style = Style::new().dimmed();
+                write!(writer, "{}", style.prefix())?;
+
+                // If getting the timestamp failed, don't bail --- only bail on
+                // formatting errors.
+                if self.timer.format_time(writer).is_err() {
+                    writer.write_str("<unknown time>")?;
+                }
+
+                write!(writer, "{} ", style.suffix())?;
+                return Ok(());
+            }
+        }
+
+        // Otherwise, just format the timestamp without ANSI formatting.
+        // If getting the timestamp failed, don't bail --- only bail on
+        // formatting errors.
+        if self.timer.format_time(writer).is_err() {
+            writer.write_str("<unknown time>")?;
+        }
+        writer.write_char(' ')
+    }
+>>>>>>> origin/master
 }
 
 #[cfg(feature = "json")]
@@ -864,7 +1206,13 @@ impl<T> Format<Json, T> {
     /// ```ignore,json
     /// {"timestamp":"Feb 20 11:28:15.096","level":"INFO","target":"mycrate", "message":"some message", "key": "value"}
     /// ```
+<<<<<<< HEAD
     /// See [`Json`][super::format::Json].
+||||||| 386969ba
+    /// See [`Json`](../format/struct.Json.html).
+=======
+    /// See [`Json`]
+>>>>>>> origin/master
     #[cfg(feature = "json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
     pub fn flatten_event(mut self, flatten_event: bool) -> Format<Json, T> {
@@ -875,7 +1223,13 @@ impl<T> Format<Json, T> {
     /// Sets whether or not the formatter will include the current span in
     /// formatted events.
     ///
+<<<<<<< HEAD
     /// See [`format::Json`][Json]
+||||||| 386969ba
+    /// See [`format::Json`](../fmt/format/struct.Json.html)
+=======
+    /// See [`Json`]
+>>>>>>> origin/master
     #[cfg(feature = "json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
     pub fn with_current_span(mut self, display_current_span: bool) -> Format<Json, T> {
@@ -886,7 +1240,13 @@ impl<T> Format<Json, T> {
     /// Sets whether or not the formatter will include a list (from root to
     /// leaf) of all currently entered spans in formatted events.
     ///
+<<<<<<< HEAD
     /// See [`format::Json`][Json]
+||||||| 386969ba
+    /// See [`format::Json`](../fmt/format/struct.Json.html)
+=======
+    /// See [`Json`]
+>>>>>>> origin/master
     #[cfg(feature = "json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
     pub fn with_span_list(mut self, display_span_list: bool) -> Format<Json, T> {
@@ -895,16 +1255,24 @@ impl<T> Format<Json, T> {
     }
 }
 
-impl<S, N, T> FormatEvent<S, N> for Format<Full, T>
+impl<C, N, T> FormatEvent<C, N> for Format<Full, T>
 where
-    S: Subscriber + for<'a> LookupSpan<'a>,
+    C: Collect + for<'a> LookupSpan<'a>,
     N: for<'a> FormatFields<'a> + 'static,
     T: FormatTime,
 {
     fn format_event(
         &self,
+<<<<<<< HEAD
         ctx: &FmtContext<'_, S, N>,
         mut writer: Writer<'_>,
+||||||| 386969ba
+        ctx: &FmtContext<'_, S, N>,
+        writer: &mut dyn fmt::Write,
+=======
+        ctx: &FmtContext<'_, C, N>,
+        mut writer: Writer<'_>,
+>>>>>>> origin/master
         event: &Event<'_>,
     ) -> fmt::Result {
         #[cfg(feature = "tracing-log")]
@@ -913,6 +1281,7 @@ where
         let meta = normalized_meta.as_ref().unwrap_or_else(|| event.metadata());
         #[cfg(not(feature = "tracing-log"))]
         let meta = event.metadata();
+<<<<<<< HEAD
 
         // if the `Format` struct *also* has an ANSI color configuration,
         // override the writer...the API for configuring ANSI color codes on the
@@ -923,7 +1292,15 @@ where
         }
 
         self.format_timestamp(&mut writer)?;
+||||||| 386969ba
+        #[cfg(feature = "ansi")]
+        time::write(&self.timer, writer, self.ansi)?;
+        #[cfg(not(feature = "ansi"))]
+        time::write(&self.timer, writer)?;
+=======
+>>>>>>> origin/master
 
+<<<<<<< HEAD
         if self.display_level {
             let fmt_level = {
                 #[cfg(feature = "ansi")]
@@ -936,7 +1313,31 @@ where
                 }
             };
             write!(writer, "{} ", fmt_level)?;
+||||||| 386969ba
+        if self.display_level {
+            let fmt_level = {
+                #[cfg(feature = "ansi")]
+                {
+                    FmtLevel::new(meta.level(), self.ansi)
+                }
+                #[cfg(not(feature = "ansi"))]
+                {
+                    FmtLevel::new(meta.level())
+                }
+            };
+            write!(writer, "{} ", fmt_level)?;
+=======
+        // if the `Format` struct *also* has an ANSI color configuration,
+        // override the writer...the API for configuring ANSI color codes on the
+        // `Format` struct is deprecated, but we still need to honor those
+        // configurations.
+        if let Some(ansi) = self.ansi {
+            writer = writer.with_ansi(ansi);
+>>>>>>> origin/master
         }
+
+        self.format_timestamp(&mut writer)?;
+        self.format_level(*meta.level(), &mut writer)?;
 
         if self.display_thread_name {
             let current_thread = std::thread::current();
@@ -979,7 +1380,7 @@ where
             if seen {
                 writer.write_char(' ')?;
             }
-        };
+        }
 
         if self.display_target {
             write!(
@@ -989,6 +1390,39 @@ where
                 dimmed.paint(":")
             )?;
         }
+
+        let line_number = if self.display_line_number {
+            meta.line()
+        } else {
+            None
+        };
+
+<<<<<<< HEAD
+        if self.display_target {
+            write!(
+                writer,
+                "{}{} ",
+                dimmed.paint(meta.target()),
+                dimmed.paint(":")
+            )?;
+||||||| 386969ba
+        write!(writer, "{}", full_ctx)?;
+        if self.display_target {
+            write!(writer, "{}: ", meta.target())?;
+=======
+        if self.display_filename {
+            if let Some(filename) = meta.file() {
+                write!(
+                    writer,
+                    "{}{}{}",
+                    dimmed.paint(filename),
+                    dimmed.paint(":"),
+                    if line_number.is_some() { "" } else { " " }
+                )?;
+            }
+>>>>>>> origin/master
+        }
+<<<<<<< HEAD
 
         let line_number = if self.display_line_number {
             meta.line()
@@ -1019,20 +1453,44 @@ where
         }
 
         ctx.format_fields(writer.by_ref(), event)?;
+||||||| 386969ba
+        ctx.format_fields(writer, event)?;
+=======
+
+        if let Some(line_number) = line_number {
+            write!(
+                writer,
+                "{}{}:{} ",
+                dimmed.prefix(),
+                line_number,
+                dimmed.suffix()
+            )?;
+        }
+
+        ctx.format_fields(writer.by_ref(), event)?;
+>>>>>>> origin/master
         writeln!(writer)
     }
 }
 
-impl<S, N, T> FormatEvent<S, N> for Format<Compact, T>
+impl<C, N, T> FormatEvent<C, N> for Format<Compact, T>
 where
-    S: Subscriber + for<'a> LookupSpan<'a>,
+    C: Collect + for<'a> LookupSpan<'a>,
     N: for<'a> FormatFields<'a> + 'static,
     T: FormatTime,
 {
     fn format_event(
         &self,
+<<<<<<< HEAD
         ctx: &FmtContext<'_, S, N>,
         mut writer: Writer<'_>,
+||||||| 386969ba
+        ctx: &FmtContext<'_, S, N>,
+        writer: &mut dyn fmt::Write,
+=======
+        ctx: &FmtContext<'_, C, N>,
+        mut writer: Writer<'_>,
+>>>>>>> origin/master
         event: &Event<'_>,
     ) -> fmt::Result {
         #[cfg(feature = "tracing-log")]
@@ -1041,6 +1499,7 @@ where
         let meta = normalized_meta.as_ref().unwrap_or_else(|| event.metadata());
         #[cfg(not(feature = "tracing-log"))]
         let meta = event.metadata();
+<<<<<<< HEAD
 
         // if the `Format` struct *also* has an ANSI color configuration,
         // override the writer...the API for configuring ANSI color codes on the
@@ -1051,7 +1510,15 @@ where
         }
 
         self.format_timestamp(&mut writer)?;
+||||||| 386969ba
+        #[cfg(feature = "ansi")]
+        time::write(&self.timer, writer, self.ansi)?;
+        #[cfg(not(feature = "ansi"))]
+        time::write(&self.timer, writer)?;
+=======
+>>>>>>> origin/master
 
+<<<<<<< HEAD
         if self.display_level {
             let fmt_level = {
                 #[cfg(feature = "ansi")]
@@ -1065,6 +1532,24 @@ where
             };
             write!(writer, "{} ", fmt_level)?;
         }
+||||||| 386969ba
+        if self.display_level {
+            let fmt_level = {
+                #[cfg(feature = "ansi")]
+                {
+                    FmtLevel::new(meta.level(), self.ansi)
+                }
+                #[cfg(not(feature = "ansi"))]
+                {
+                    FmtLevel::new(meta.level())
+                }
+            };
+            write!(writer, "{} ", fmt_level)?;
+        }
+=======
+        self.format_timestamp(&mut writer)?;
+        self.format_level(*meta.level(), &mut writer)?;
+>>>>>>> origin/master
 
         if self.display_thread_name {
             let current_thread = std::thread::current();
@@ -1084,6 +1569,7 @@ where
             write!(writer, "{:0>2?} ", std::thread::current().id())?;
         }
 
+<<<<<<< HEAD
         let fmt_ctx = {
             #[cfg(feature = "ansi")]
             {
@@ -1099,7 +1585,23 @@ where
         let dimmed = writer.dimmed();
 
         let mut needs_space = false;
+||||||| 386969ba
+        let fmt_ctx = {
+            #[cfg(feature = "ansi")]
+            {
+                FmtCtx::new(&ctx, event.parent(), self.ansi)
+            }
+            #[cfg(not(feature = "ansi"))]
+            {
+                FmtCtx::new(&ctx, event.parent())
+            }
+        };
+        write!(writer, "{}", fmt_ctx)?;
+=======
+        let dimmed = writer.dimmed();
+>>>>>>> origin/master
         if self.display_target {
+<<<<<<< HEAD
             write!(
                 writer,
                 "{}{}",
@@ -1107,7 +1609,18 @@ where
                 dimmed.paint(":")
             )?;
             needs_space = true;
+||||||| 386969ba
+            write!(writer, "{}:", meta.target())?;
+=======
+            write!(
+                writer,
+                "{}{}",
+                dimmed.paint(meta.target()),
+                dimmed.paint(":")
+            )?;
+>>>>>>> origin/master
         }
+<<<<<<< HEAD
 
         if self.display_filename {
             if let Some(filename) = meta.file() {
@@ -1149,8 +1662,45 @@ where
                 if !fields.is_empty() {
                     write!(writer, " {}", dimmed.paint(&fields.fields))?;
                 }
+||||||| 386969ba
+        ctx.format_fields(writer, event)?;
+        let span = ctx.ctx.current_span();
+        if let Some(id) = span.id() {
+            if let Some(span) = ctx.ctx.metadata(id) {
+                write!(writer, "{}", span.fields()).unwrap_or(());
+=======
+
+        if self.display_filename {
+            if let Some(filename) = meta.file() {
+                write!(writer, "{}{}", dimmed.paint(filename), dimmed.paint(":"))?;
+>>>>>>> origin/master
             }
         }
+
+        if self.display_line_number {
+            if let Some(line_number) = meta.line() {
+                write!(
+                    writer,
+                    "{}{}{}{}",
+                    dimmed.prefix(),
+                    line_number,
+                    dimmed.suffix(),
+                    dimmed.paint(":")
+                )?;
+            }
+        }
+
+        ctx.format_fields(writer.by_ref(), event)?;
+
+        for span in ctx.event_scope().into_iter().flat_map(Scope::from_root) {
+            let exts = span.extensions();
+            if let Some(fields) = exts.get::<FormattedFields<N>>() {
+                if !fields.is_empty() {
+                    write!(writer, " {}", dimmed.paint(&fields.fields))?;
+                }
+            }
+        }
+
         writeln!(writer)
     }
 }
@@ -1315,6 +1865,7 @@ struct ErrorSourceList<'a>(&'a (dyn std::error::Error + 'static));
 
 impl<'a> Display for ErrorSourceList<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+<<<<<<< HEAD
         let mut list = f.debug_list();
         let mut curr = Some(self.0);
         while let Some(curr_err) = curr {
@@ -1357,7 +1908,56 @@ where
             if self.ansi {
                 return Style::new().bold();
             }
+||||||| 386969ba
+        f.debug_struct("DefaultVisitor")
+            .field("writer", &format_args!("<dyn fmt::Write>"))
+            .field("is_empty", &self.is_empty)
+            .field("result", &self.result)
+            .finish()
+    }
+}
+
+struct FmtCtx<'a, S, N> {
+    ctx: &'a FmtContext<'a, S, N>,
+    span: Option<&'a span::Id>,
+    #[cfg(feature = "ansi")]
+    ansi: bool,
+}
+
+impl<'a, S, N: 'a> FmtCtx<'a, S, N>
+where
+    S: Subscriber + for<'lookup> LookupSpan<'lookup>,
+    N: for<'writer> FormatFields<'writer> + 'static,
+{
+    #[cfg(feature = "ansi")]
+    pub(crate) fn new(
+        ctx: &'a FmtContext<'_, S, N>,
+        span: Option<&'a span::Id>,
+        ansi: bool,
+    ) -> Self {
+        Self { ctx, ansi, span }
+    }
+
+    #[cfg(not(feature = "ansi"))]
+    pub(crate) fn new(ctx: &'a FmtContext<'_, S, N>, span: Option<&'a span::Id>) -> Self {
+        Self { ctx, span }
+    }
+
+    fn bold(&self) -> Style {
+        #[cfg(feature = "ansi")]
+        {
+            if self.ansi {
+                return Style::new().bold();
+            }
+=======
+        let mut list = f.debug_list();
+        let mut curr = Some(self.0);
+        while let Some(curr_err) = curr {
+            list.entry(&format_args!("{}", curr_err));
+            curr = curr_err.source();
+>>>>>>> origin/master
         }
+<<<<<<< HEAD
 
         Style::new()
     }
@@ -1391,6 +1991,129 @@ where
     }
 }
 
+||||||| 386969ba
+
+        Style::new()
+    }
+}
+
+impl<'a, S, N: 'a> fmt::Display for FmtCtx<'a, S, N>
+where
+    S: Subscriber + for<'lookup> LookupSpan<'lookup>,
+    N: for<'writer> FormatFields<'writer> + 'static,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let bold = self.bold();
+        let mut seen = false;
+
+        let span = self
+            .span
+            .and_then(|id| self.ctx.ctx.span(&id))
+            .or_else(|| self.ctx.ctx.lookup_current());
+
+        let scope = span
+            .into_iter()
+            .flat_map(|span| span.from_root().chain(iter::once(span)));
+
+        for span in scope {
+            seen = true;
+            write!(f, "{}:", bold.paint(span.metadata().name()))?;
+        }
+
+        if seen {
+            f.write_char(' ')?;
+        }
+        Ok(())
+    }
+}
+
+struct FullCtx<'a, S, N>
+where
+    S: Subscriber + for<'lookup> LookupSpan<'lookup>,
+    N: for<'writer> FormatFields<'writer> + 'static,
+{
+    ctx: &'a FmtContext<'a, S, N>,
+    span: Option<&'a span::Id>,
+    #[cfg(feature = "ansi")]
+    ansi: bool,
+}
+
+impl<'a, S, N: 'a> FullCtx<'a, S, N>
+where
+    S: Subscriber + for<'lookup> LookupSpan<'lookup>,
+    N: for<'writer> FormatFields<'writer> + 'static,
+{
+    #[cfg(feature = "ansi")]
+    pub(crate) fn new(
+        ctx: &'a FmtContext<'a, S, N>,
+        span: Option<&'a span::Id>,
+        ansi: bool,
+    ) -> Self {
+        Self { ctx, span, ansi }
+    }
+
+    #[cfg(not(feature = "ansi"))]
+    pub(crate) fn new(ctx: &'a FmtContext<'a, S, N>, span: Option<&'a span::Id>) -> Self {
+        Self { ctx, span }
+    }
+
+    fn bold(&self) -> Style {
+        #[cfg(feature = "ansi")]
+        {
+            if self.ansi {
+                return Style::new().bold();
+            }
+        }
+
+        Style::new()
+    }
+}
+
+impl<'a, S, N> fmt::Display for FullCtx<'a, S, N>
+where
+    S: Subscriber + for<'lookup> LookupSpan<'lookup>,
+    N: for<'writer> FormatFields<'writer> + 'static,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let bold = self.bold();
+        let mut seen = false;
+
+        let span = self
+            .span
+            .and_then(|id| self.ctx.ctx.span(&id))
+            .or_else(|| self.ctx.ctx.lookup_current());
+
+        let scope = span
+            .into_iter()
+            .flat_map(|span| span.from_root().chain(iter::once(span)));
+
+        for span in scope {
+            write!(f, "{}", bold.paint(span.metadata().name()))?;
+            seen = true;
+
+            let ext = span.extensions();
+            let fields = &ext
+                .get::<FormattedFields<N>>()
+                .expect("Unable to find FormattedFields in extensions; this is a bug");
+            if !fields.is_empty() {
+                write!(f, "{}{}{}", bold.paint("{"), fields, bold.paint("}"))?;
+            }
+            f.write_char(':')?;
+        }
+
+        if seen {
+            f.write_char(' ')?;
+        }
+        Ok(())
+    }
+}
+
+=======
+        list.finish()
+    }
+}
+
+>>>>>>> origin/master
 #[cfg(not(feature = "ansi"))]
 struct Style;
 
@@ -1399,11 +2122,16 @@ impl Style {
     fn new() -> Self {
         Style
     }
+<<<<<<< HEAD
 
     fn bold(self) -> Self {
         self
     }
 
+||||||| 386969ba
+=======
+
+>>>>>>> origin/master
     fn paint(&self, d: impl fmt::Display) -> impl fmt::Display {
         d
     }
@@ -1460,46 +2188,65 @@ impl<'a> fmt::Display for FmtThreadName<'a> {
     }
 }
 
-struct FmtLevel<'a> {
-    level: &'a Level,
-    #[cfg(feature = "ansi")]
-    ansi: bool,
-}
+trait LevelNames {
+    const TRACE_STR: &'static str;
+    const DEBUG_STR: &'static str;
+    const INFO_STR: &'static str;
+    const WARN_STR: &'static str;
+    const ERROR_STR: &'static str;
 
-impl<'a> FmtLevel<'a> {
     #[cfg(feature = "ansi")]
-    pub(crate) fn new(level: &'a Level, ansi: bool) -> Self {
-        Self { level, ansi }
+    fn format_level(level: Level, ansi: bool) -> FmtLevel<Self> {
+        FmtLevel {
+            level,
+            ansi,
+            _f: PhantomData,
+        }
     }
 
     #[cfg(not(feature = "ansi"))]
-    pub(crate) fn new(level: &'a Level) -> Self {
-        Self { level }
-    }
-}
-
-const TRACE_STR: &str = "TRACE";
-const DEBUG_STR: &str = "DEBUG";
-const INFO_STR: &str = " INFO";
-const WARN_STR: &str = " WARN";
-const ERROR_STR: &str = "ERROR";
-
-#[cfg(not(feature = "ansi"))]
-impl<'a> fmt::Display for FmtLevel<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self.level {
-            Level::TRACE => f.pad(TRACE_STR),
-            Level::DEBUG => f.pad(DEBUG_STR),
-            Level::INFO => f.pad(INFO_STR),
-            Level::WARN => f.pad(WARN_STR),
-            Level::ERROR => f.pad(ERROR_STR),
+    fn format_level(level: Level) -> FmtLevel<Self> {
+        FmtLevel {
+            level,
+            _f: PhantomData,
         }
     }
 }
 
 #[cfg(feature = "ansi")]
-impl<'a> fmt::Display for FmtLevel<'a> {
+impl LevelNames for Pretty {
+    const TRACE_STR: &'static str = "TRACE";
+    const DEBUG_STR: &'static str = "DEBUG";
+    const INFO_STR: &'static str = " INFO";
+    const WARN_STR: &'static str = " WARN";
+    const ERROR_STR: &'static str = "ERROR";
+}
+
+impl LevelNames for Full {
+    const TRACE_STR: &'static str = "TRACE";
+    const DEBUG_STR: &'static str = "DEBUG";
+    const INFO_STR: &'static str = " INFO";
+    const WARN_STR: &'static str = " WARN";
+    const ERROR_STR: &'static str = "ERROR";
+}
+impl LevelNames for Compact {
+    const TRACE_STR: &'static str = ".";
+    const DEBUG_STR: &'static str = ":";
+    const INFO_STR: &'static str = "i";
+    const WARN_STR: &'static str = "!";
+    const ERROR_STR: &'static str = "X";
+}
+
+struct FmtLevel<F: ?Sized> {
+    level: Level,
+    #[cfg(feature = "ansi")]
+    ansi: bool,
+    _f: PhantomData<fn(F)>,
+}
+
+impl<F: LevelNames> fmt::Display for FmtLevel<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+<<<<<<< HEAD
         if self.ansi {
             match *self.level {
                 Level::TRACE => write!(f, "{}", Color::Purple.paint(TRACE_STR)),
@@ -1515,7 +2262,43 @@ impl<'a> fmt::Display for FmtLevel<'a> {
                 Level::INFO => f.pad(INFO_STR),
                 Level::WARN => f.pad(WARN_STR),
                 Level::ERROR => f.pad(ERROR_STR),
+||||||| 386969ba
+        if self.ansi {
+            match *self.level {
+                Level::TRACE => write!(f, "{}", Colour::Purple.paint(TRACE_STR)),
+                Level::DEBUG => write!(f, "{}", Colour::Blue.paint(DEBUG_STR)),
+                Level::INFO => write!(f, "{}", Colour::Green.paint(INFO_STR)),
+                Level::WARN => write!(f, "{}", Colour::Yellow.paint(WARN_STR)),
+                Level::ERROR => write!(f, "{}", Colour::Red.paint(ERROR_STR)),
             }
+        } else {
+            match *self.level {
+                Level::TRACE => f.pad(TRACE_STR),
+                Level::DEBUG => f.pad(DEBUG_STR),
+                Level::INFO => f.pad(INFO_STR),
+                Level::WARN => f.pad(WARN_STR),
+                Level::ERROR => f.pad(ERROR_STR),
+=======
+        #[cfg(feature = "ansi")]
+        {
+            if self.ansi {
+                return match self.level {
+                    Level::TRACE => write!(f, "{}", Color::Purple.paint(F::TRACE_STR)),
+                    Level::DEBUG => write!(f, "{}", Color::Blue.paint(F::DEBUG_STR)),
+                    Level::INFO => write!(f, "{}", Color::Green.paint(F::INFO_STR)),
+                    Level::WARN => write!(f, "{}", Color::Yellow.paint(F::WARN_STR)),
+                    Level::ERROR => write!(f, "{}", Color::Red.paint(F::ERROR_STR)),
+                };
+>>>>>>> origin/master
+            }
+        }
+
+        match self.level {
+            Level::TRACE => f.pad(F::TRACE_STR),
+            Level::DEBUG => f.pad(F::DEBUG_STR),
+            Level::INFO => f.pad(F::INFO_STR),
+            Level::WARN => f.pad(F::WARN_STR),
+            Level::ERROR => f.pad(F::ERROR_STR),
         }
     }
 }
@@ -1580,7 +2363,13 @@ impl<'a, F> fmt::Debug for FieldFnVisitor<'a, F> {
 
 /// Configures what points in the span lifecycle are logged as events.
 ///
+<<<<<<< HEAD
 /// See also [`with_span_events`](super::SubscriberBuilder.html::with_span_events).
+||||||| 386969ba
+/// See also [`with_span_events`](../struct.SubscriberBuilder.html#method.with_span_events).
+=======
+/// See also [`with_span_events`](super::CollectorBuilder::with_span_events()).
+>>>>>>> origin/master
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct FmtSpan(u8);
 
@@ -1734,17 +2523,41 @@ impl Display for TimingDisplay {
 
 #[cfg(test)]
 pub(super) mod test {
+<<<<<<< HEAD
     use crate::fmt::{test::MockMakeWriter, time::FormatTime};
     use tracing::{
         self,
         dispatcher::{set_default, Dispatch},
         subscriber::with_default,
     };
+||||||| 386969ba
+=======
+    use crate::fmt::{test::MockMakeWriter, time::FormatTime};
+    use tracing::{
+        self,
+        collect::with_default,
+        dispatch::{set_default, Dispatch},
+    };
+>>>>>>> origin/master
 
+<<<<<<< HEAD
     use super::*;
 
     use regex::Regex;
     use std::{fmt, path::Path};
+||||||| 386969ba
+    use crate::fmt::{test::MockWriter, time::FormatTime};
+    use lazy_static::lazy_static;
+    use tracing::{self, subscriber::with_default};
+
+    use super::TimingDisplay;
+    use std::{fmt, sync::Mutex};
+=======
+    use super::{FmtSpan, TimingDisplay, Writer};
+    use regex::Regex;
+    use std::fmt;
+    use std::path::Path;
+>>>>>>> origin/master
 
     pub(crate) struct MockTime;
     impl FormatTime for MockTime {
@@ -1753,7 +2566,30 @@ pub(super) mod test {
         }
     }
 
+<<<<<<< HEAD
+||||||| 386969ba
+    #[cfg(feature = "ansi")]
+=======
     #[test]
+    fn disable_everything() {
+        // This test reproduces https://github.com/tokio-rs/tracing/issues/1354
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+            .without_time()
+            .with_level(false)
+            .with_target(false)
+            .with_thread_ids(false)
+            .with_thread_names(false);
+        #[cfg(feature = "ansi")]
+        let subscriber = subscriber.with_ansi(false);
+        assert_info_hello(subscriber, make_writer, "hello\n")
+    }
+
+    #[cfg(feature = "ansi")]
+>>>>>>> origin/master
+    #[test]
+<<<<<<< HEAD
     fn disable_everything() {
         // This test reproduces https://github.com/tokio-rs/tracing/issues/1354
         let make_writer = MockMakeWriter::default();
@@ -1767,8 +2603,23 @@ pub(super) mod test {
         #[cfg(feature = "ansi")]
         let subscriber = subscriber.with_ansi(false);
         assert_info_hello(subscriber, make_writer, "hello\n")
+||||||| 386969ba
+    fn with_ansi_true() {
+        lazy_static! {
+            static ref BUF: Mutex<Vec<u8>> = Mutex::new(vec![]);
+        }
+
+        let make_writer = || MockWriter::new(&BUF);
+        let expected = "\u{1b}[2mfake time\u{1b}[0m \u{1b}[32m INFO\u{1b}[0m tracing_subscriber::fmt::format::test: some ansi test\n";
+        test_ansi(make_writer, expected, true, &BUF);
+=======
+    fn with_ansi_true() {
+        let expected = "\u{1b}[2mfake time\u{1b}[0m \u{1b}[32m INFO\u{1b}[0m \u{1b}[2mtracing_subscriber::fmt::format::test\u{1b}[0m\u{1b}[2m:\u{1b}[0m hello\n";
+        assert_info_hello_ansi(true, expected);
+>>>>>>> origin/master
     }
 
+<<<<<<< HEAD
     fn test_ansi<T>(
         is_ansi: bool,
         expected: &str,
@@ -1783,9 +2634,39 @@ pub(super) mod test {
             .with_ansi(is_ansi)
             .with_timer(MockTime);
         run_test(subscriber, make_writer, expected)
+||||||| 386969ba
+    #[cfg(feature = "ansi")]
+    #[test]
+    fn with_ansi_false() {
+        lazy_static! {
+            static ref BUF: Mutex<Vec<u8>> = Mutex::new(vec![]);
+        }
+
+        let make_writer = || MockWriter::new(&BUF);
+        let expected = "fake time  INFO tracing_subscriber::fmt::format::test: some ansi test\n";
+
+        test_ansi(make_writer, expected, false, &BUF);
+=======
+    #[cfg(feature = "ansi")]
+    #[test]
+    fn with_ansi_false() {
+        let expected = "fake time  INFO tracing_subscriber::fmt::format::test: hello\n";
+        assert_info_hello_ansi(false, expected);
+    }
+
+    #[cfg(feature = "ansi")]
+    fn assert_info_hello_ansi(is_ansi: bool, expected: &str) {
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+            .with_ansi(is_ansi)
+            .with_timer(MockTime);
+        assert_info_hello(subscriber, make_writer, expected)
+>>>>>>> origin/master
     }
 
     #[cfg(not(feature = "ansi"))]
+<<<<<<< HEAD
     fn test_without_ansi<T>(
         expected: &str,
         builder: crate::fmt::SubscriberBuilder<DefaultFields, Format<T>>,
@@ -1812,19 +2693,93 @@ pub(super) mod test {
             .with_ansi(false)
             .with_timer(MockTime);
         run_test(subscriber, make_writer, expected);
+||||||| 386969ba
+    #[test]
+    fn without_ansi() {
+        lazy_static! {
+            static ref BUF: Mutex<Vec<u8>> = Mutex::new(vec![]);
+        }
+
+        let make_writer = || MockWriter::new(&BUF);
+        let expected = "fake time  INFO tracing_subscriber::fmt::format::test: some ansi test\n";
+        let subscriber = crate::fmt::Subscriber::builder()
+            .with_writer(make_writer)
+            .with_timer(MockTime)
+            .finish();
+
+        with_default(subscriber, || {
+            tracing::info!("some ansi test");
+        });
+
+        let actual = String::from_utf8(BUF.try_lock().unwrap().to_vec()).unwrap();
+        assert_eq!(expected, actual.as_str());
+    }
+
+    #[cfg(feature = "ansi")]
+    fn test_ansi<T>(make_writer: T, expected: &str, is_ansi: bool, buf: &Mutex<Vec<u8>>)
+    where
+        T: crate::fmt::MakeWriter + Send + Sync + 'static,
+    {
+        let subscriber = crate::fmt::Subscriber::builder()
+            .with_writer(make_writer)
+            .with_ansi(is_ansi)
+            .with_timer(MockTime)
+            .finish();
+
+        with_default(subscriber, || {
+            tracing::info!("some ansi test");
+        });
+
+        let actual = String::from_utf8(buf.try_lock().unwrap().to_vec()).unwrap();
+        assert_eq!(expected, actual.as_str());
+=======
+    #[test]
+    fn without_ansi() {
+        let make_writer = MockMakeWriter::default();
+        let expected = "fake time  INFO tracing_subscriber::fmt::format::test: hello\n";
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer)
+            .with_timer(MockTime);
+        assert_info_hello(subscriber, make_writer, expected);
+>>>>>>> origin/master
     }
 
     #[test]
+<<<<<<< HEAD
     fn with_line_number_and_file_name() {
         let make_writer = MockMakeWriter::default();
         let subscriber = crate::fmt::Subscriber::builder()
             .with_writer(make_writer.clone())
             .with_file(true)
             .with_line_number(true)
+||||||| 386969ba
+    fn without_level() {
+        lazy_static! {
+            static ref BUF: Mutex<Vec<u8>> = Mutex::new(vec![]);
+        }
+
+        let make_writer = || MockWriter::new(&BUF);
+        let subscriber = crate::fmt::Subscriber::builder()
+            .with_writer(make_writer)
+=======
+    fn without_level() {
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+>>>>>>> origin/master
             .with_level(false)
             .with_ansi(false)
+<<<<<<< HEAD
             .with_timer(MockTime);
+||||||| 386969ba
+            .with_timer(MockTime)
+            .finish();
+=======
+            .with_timer(MockTime);
+        let expected = "fake time tracing_subscriber::fmt::format::test: hello\n";
+>>>>>>> origin/master
 
+<<<<<<< HEAD
         let expected = Regex::new(&format!(
             "^fake time tracing_subscriber::fmt::format::test: {}:[0-9]+: hello\n$",
             current_path()
@@ -1870,11 +2825,144 @@ pub(super) mod test {
         let expected = &format!(
             "fake time tracing_subscriber::fmt::format::test: {}: hello\n",
             current_path(),
-        );
+||||||| 386969ba
+        with_default(subscriber, || {
+            tracing::info!("hello");
+        });
+        let actual = String::from_utf8(BUF.try_lock().unwrap().to_vec()).unwrap();
+        assert_eq!(
+            "fake time tracing_subscriber::fmt::format::test: hello\n",
+            actual.as_str()
+=======
         assert_info_hello(subscriber, make_writer, expected);
     }
 
     #[test]
+    fn with_line_number_and_file_name() {
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+            .with_file(true)
+            .with_line_number(true)
+            .with_level(false)
+            .with_ansi(false)
+            .with_timer(MockTime);
+
+        let expected = Regex::new(&format!(
+            "^fake time tracing_subscriber::fmt::format::test: {}:[0-9]+: hello\n$",
+            current_path()
+                // if we're on Windows, the path might contain backslashes, which
+                // have to be escaped before compiling the regex.
+                .replace('\\', "\\\\")
+        ))
+        .unwrap();
+        let _default = set_default(&subscriber.into());
+        tracing::info!("hello");
+        let res = make_writer.get_string();
+        assert!(expected.is_match(&res));
+    }
+
+    #[test]
+    fn with_line_number() {
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+            .with_line_number(true)
+            .with_level(false)
+            .with_ansi(false)
+            .with_timer(MockTime);
+
+        let expected =
+            Regex::new("^fake time tracing_subscriber::fmt::format::test: [0-9]+: hello\n$")
+                .unwrap();
+        let _default = set_default(&subscriber.into());
+        tracing::info!("hello");
+        let res = make_writer.get_string();
+        assert!(expected.is_match(&res));
+    }
+
+    #[test]
+    fn with_filename() {
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+            .with_file(true)
+            .with_level(false)
+            .with_ansi(false)
+            .with_timer(MockTime);
+        let expected = &format!(
+            "fake time tracing_subscriber::fmt::format::test: {}: hello\n",
+            current_path(),
+>>>>>>> origin/master
+        );
+<<<<<<< HEAD
+        assert_info_hello(subscriber, make_writer, expected);
+||||||| 386969ba
+=======
+        assert_info_hello(subscriber, make_writer, expected);
+    }
+
+    #[test]
+    fn with_thread_ids() {
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+            .with_thread_ids(true)
+            .with_ansi(false)
+            .with_timer(MockTime);
+        let expected =
+            "fake time  INFO ThreadId(NUMERIC) tracing_subscriber::fmt::format::test: hello\n";
+
+        assert_info_hello_ignore_numeric(subscriber, make_writer, expected);
+    }
+
+    #[test]
+    fn pretty_default() {
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .pretty()
+            .with_writer(make_writer.clone())
+            .with_ansi(false)
+            .with_timer(MockTime);
+        let expected = format!(
+            r#"  fake time  INFO tracing_subscriber::fmt::format::test: hello
+    at {}:NUMERIC
+
+"#,
+            file!()
+        );
+
+        assert_info_hello_ignore_numeric(subscriber, make_writer, &expected)
+    }
+
+    fn assert_info_hello(subscriber: impl Into<Dispatch>, buf: MockMakeWriter, expected: &str) {
+        let _default = set_default(&subscriber.into());
+        tracing::info!("hello");
+        let result = buf.get_string();
+
+        assert_eq!(expected, result)
+    }
+
+    // When numeric characters are used they often form a non-deterministic value as they usually represent things like a thread id or line number.
+    // This assert method should be used when non-deterministic numeric characters are present.
+    fn assert_info_hello_ignore_numeric(
+        subscriber: impl Into<Dispatch>,
+        buf: MockMakeWriter,
+        expected: &str,
+    ) {
+        let _default = set_default(&subscriber.into());
+        tracing::info!("hello");
+
+        let regex = Regex::new("[0-9]+").unwrap();
+        let result = buf.get_string();
+        let result_cleaned = regex.replace_all(&result, "NUMERIC");
+
+        assert_eq!(expected, result_cleaned)
+>>>>>>> origin/master
+    }
+
+    #[test]
+<<<<<<< HEAD
     fn with_thread_ids() {
         let make_writer = MockMakeWriter::default();
         let subscriber = crate::fmt::Subscriber::builder()
@@ -1942,19 +3030,58 @@ pub(super) mod test {
         let make_writer = MockMakeWriter::default();
         let subscriber = builder
             .with_writer(make_writer.clone())
+||||||| 386969ba
+    fn overridden_parents() {
+        lazy_static! {
+            static ref BUF: Mutex<Vec<u8>> = Mutex::new(vec![]);
+        }
+
+        let make_writer = || MockWriter::new(&BUF);
+        let subscriber = crate::fmt::Subscriber::builder()
+            .with_writer(make_writer)
+=======
+    fn overridden_parents() {
+        let make_writer = MockMakeWriter::default();
+        let collector = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+>>>>>>> origin/master
             .with_level(false)
             .with_ansi(false)
             .with_timer(MockTime)
             .finish();
 
+<<<<<<< HEAD
         with_default(subscriber, || {
             let span1 = tracing::info_span!("span1", span = 1);
             let span2 = tracing::info_span!(parent: &span1, "span2", span = 2);
+||||||| 386969ba
+        with_default(subscriber, || {
+            let span1 = tracing::info_span!("span1");
+            let span2 = tracing::info_span!(parent: &span1, "span2");
+=======
+        with_default(collector, || {
+            let span1 = tracing::info_span!("span1");
+            let span2 = tracing::info_span!(parent: &span1, "span2");
+>>>>>>> origin/master
             tracing::info!(parent: &span2, "hello");
         });
+<<<<<<< HEAD
         assert_eq!(expected, make_writer.get_string());
+||||||| 386969ba
+        let actual = String::from_utf8(BUF.try_lock().unwrap().to_vec()).unwrap();
+        assert_eq!(
+            "fake time span1:span2: tracing_subscriber::fmt::format::test: hello\n",
+            actual.as_str()
+        );
+=======
+        assert_eq!(
+            "fake time span1:span2: tracing_subscriber::fmt::format::test: hello\n",
+            make_writer.get_string()
+        );
+>>>>>>> origin/master
     }
 
+<<<<<<< HEAD
     fn test_overridden_parents_in_scope<T>(
         expected1: &str,
         expected2: &str,
@@ -1966,6 +3093,23 @@ pub(super) mod test {
         let make_writer = MockMakeWriter::default();
         let subscriber = builder
             .with_writer(make_writer.clone())
+||||||| 386969ba
+    #[test]
+    fn overridden_parents_in_scope() {
+        lazy_static! {
+            static ref BUF: Mutex<Vec<u8>> = Mutex::new(vec![]);
+        }
+
+        let make_writer = || MockWriter::new(&BUF);
+        let subscriber = crate::fmt::Subscriber::builder()
+            .with_writer(make_writer)
+=======
+    #[test]
+    fn overridden_parents_in_scope() {
+        let make_writer = MockMakeWriter::default();
+        let subscriber = crate::fmt::Collector::builder()
+            .with_writer(make_writer.clone())
+>>>>>>> origin/master
             .with_level(false)
             .with_ansi(false)
             .with_timer(MockTime)
@@ -1978,10 +3122,34 @@ pub(super) mod test {
             let _e3 = span3.enter();
 
             tracing::info!("hello");
+<<<<<<< HEAD
             assert_eq!(expected1, make_writer.get_string().as_str());
+||||||| 386969ba
+            assert_eq!(
+                "fake time span3: tracing_subscriber::fmt::format::test: hello\n",
+                actual().as_str()
+            );
+=======
+            assert_eq!(
+                "fake time span3: tracing_subscriber::fmt::format::test: hello\n",
+                make_writer.get_string().as_str()
+            );
+>>>>>>> origin/master
 
             tracing::info!(parent: &span2, "hello");
+<<<<<<< HEAD
             assert_eq!(expected2, make_writer.get_string().as_str());
+||||||| 386969ba
+            assert_eq!(
+                "fake time span1:span2: tracing_subscriber::fmt::format::test: hello\n",
+                actual().as_str()
+            );
+=======
+            assert_eq!(
+                "fake time span1:span2: tracing_subscriber::fmt::format::test: hello\n",
+                make_writer.get_string().as_str()
+            );
+>>>>>>> origin/master
         });
     }
 

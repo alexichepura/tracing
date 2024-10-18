@@ -7,9 +7,22 @@ name = "tracing"
 #   - Cargo.toml
 #   - README.md
 # - Update CHANGELOG.md.
+<<<<<<< HEAD
 # - Create "v0.1.x" git tag
 version = "0.1.40"
 authors = ["Eliza Weisman <eliza@buoyant.io>", "Tokio Contributors <team@tokio.rs>"]
+||||||| 386969ba
+# - Create "v0.1.x" git tag
+version = "0.1.21"
+authors = ["Eliza Weisman <eliza@buoyant.io>", "Tokio Contributors <team@tokio.rs>"]
+=======
+# - Create "v0.2.x" git tag
+version = "0.2.0"
+authors = [
+    "Eliza Weisman <eliza@buoyant.io>",
+    "Tokio Contributors <team@tokio.rs>",
+]
+>>>>>>> origin/master
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/tokio-rs/tracing"
@@ -28,16 +41,41 @@ edition = "2018"
 rust-version = "1.63.0"
 
 [dependencies]
+<<<<<<< HEAD
 tracing-core = { path = "../tracing-core", version = "0.1.32", default-features = false }
 log = { version = "0.4.17", optional = true }
 tracing-attributes = { path = "../tracing-attributes", version = "0.1.27", optional = true }
 pin-project-lite = "0.2.9"
+||||||| 386969ba
+tracing-core = { path = "../tracing-core", version = "0.1.17", default-features = false }
+log = { version = "0.4", optional = true }
+tracing-attributes = { path = "../tracing-attributes", version = "0.1.10", optional = true }
+cfg-if = "0.1.10"
+pin-project-lite = "0.1"
+=======
+tracing-core = { path = "../tracing-core", version = "0.2", default-features = false }
+log = { version = "0.4.17", optional = true }
+tracing-attributes = { path = "../tracing-attributes", version = "0.2", optional = true }
+pin-project-lite = "0.2.9"
+>>>>>>> origin/master
 
 [dev-dependencies]
+<<<<<<< HEAD
 criterion = { version = "0.3.6", default_features = false }
 futures = { version = "0.3.21", default_features = false }
 log = "0.4.17"
 tracing-mock = { path = "../tracing-mock" }
+||||||| 386969ba
+futures = "0.1"
+criterion = { version = "0.3", default_features = false }
+log = "0.4"
+tokio = { version = "0.2.21", features = ["rt-core"] }
+=======
+criterion = { version = "0.3.6", default-features = false }
+futures = { version = "0.3.21", default-features = false }
+log = "0.4.17"
+tracing-mock = { path = "../tracing-mock" }
+>>>>>>> origin/master
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 wasm-bindgen-test = "0.3.38"
@@ -45,24 +83,22 @@ wasm-bindgen-test = "0.3.38"
 [features]
 default = ["std", "attributes"]
 
-max_level_off   = []
+max_level_off = []
 max_level_error = []
-max_level_warn  = []
-max_level_info  = []
+max_level_warn = []
+max_level_info = []
 max_level_debug = []
 max_level_trace = []
 
-release_max_level_off   = []
+release_max_level_off = []
 release_max_level_error = []
-release_max_level_warn  = []
-release_max_level_info  = []
+release_max_level_warn = []
+release_max_level_info = []
 release_max_level_debug = []
 release_max_level_trace = []
 
-# This feature flag is no longer necessary.
-async-await = []
-
-std = ["tracing-core/std"]
+alloc = ["tracing-core/alloc"]
+std = ["tracing-core/std", "alloc"]
 log-always = ["log"]
 attributes = ["tracing-attributes"]
 valuable = ["tracing-core/valuable"]
@@ -108,8 +144,21 @@ maintenance = { status = "actively-developed" }
 
 [package.metadata.docs.rs]
 all-features = true
+<<<<<<< HEAD
 # enable unstable features in the documentation
 rustdoc-args = ["--cfg", "docsrs", "--cfg", "tracing_unstable"]
 # it's necessary to _also_ pass `--cfg tracing_unstable` to rustc, or else
 # dependencies will not be enabled, and the docs build will fail.
 rustc-args = ["--cfg", "tracing_unstable"]
+||||||| 386969ba
+rustdoc-args = ["--cfg", "docsrs"]
+=======
+# enable unstable features in the documentation
+rustdoc-args = ["--cfg", "docsrs", "--cfg", "tracing_unstable"]
+# it's necessary to _also_ pass `--cfg tracing_unstable` to rustc, or else
+# dependencies will not be enabled, and the docs build will fail.
+rustc-args = ["--cfg", "tracing_unstable"]
+
+[lints]
+workspace = true
+>>>>>>> origin/master

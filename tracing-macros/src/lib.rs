@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 #![cfg_attr(docsrs, deny(rustdoc::broken_intra_doc_links))]
 #[doc(hidden)]
 pub use tracing;
+||||||| 386969ba
+#![cfg_attr(docsrs, deny(broken_intra_doc_links))]
+=======
+#[doc(hidden)]
+pub use tracing;
+>>>>>>> origin/master
 
 /// Alias of `dbg!` for avoiding conflicts with the `std::dbg!` macro.
 #[macro_export]

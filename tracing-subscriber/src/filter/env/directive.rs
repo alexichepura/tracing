@@ -11,8 +11,15 @@ use tracing_core::{span, Level, Metadata};
 
 /// A single filtering directive.
 // TODO(eliza): add a builder for programmatically constructing directives?
+<<<<<<< HEAD
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(docsrs, doc(cfg(feature = "env-filter")))]
+||||||| 386969ba
+#[derive(Debug, Eq, PartialEq)]
+=======
+#[derive(Debug, Eq, PartialEq, Clone)]
+#[cfg_attr(docsrs, doc(cfg(feature = "env-filter")))]
+>>>>>>> origin/master
 pub struct Directive {
     in_span: Option<String>,
     fields: Vec<field::Match>,

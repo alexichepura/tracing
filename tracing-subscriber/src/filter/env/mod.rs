@@ -1,4 +1,4 @@
-//! A `Layer` that enables or disables spans and events based on a set of
+//! A `Subscriber` that enables or disables spans and events based on a set of
 //! filtering directives.
 
 // these are publicly re-exported, but the compiler doesn't realize
@@ -11,7 +11,7 @@ mod field;
 
 use crate::{
     filter::LevelFilter,
-    layer::{Context, Layer},
+    subscribe::{Context, Subscribe},
     sync::RwLock,
 };
 use directive::ParseError;
@@ -19,15 +19,15 @@ use std::{cell::RefCell, collections::HashMap, env, error::Error, fmt, str::From
 use thread_local::ThreadLocal;
 use tracing_core::{
     callsite,
+    collect::{Collect, Interest},
     field::Field,
-    span,
-    subscriber::{Interest, Subscriber},
-    Metadata,
+    span, Metadata,
 };
 
-/// A [`Layer`] which filters spans and events based on a set of filter
+/// A [`Subscriber`] which filters spans and events based on a set of filter
 /// directives.
 ///
+<<<<<<< HEAD
 /// `EnvFilter` implements both the [`Layer`](#impl-Layer<S>) and [`Filter`] traits, so it may
 /// be used for both [global filtering][global] and [per-layer filtering][plf],
 /// respectively. See [the documentation on filtering with `Layer`s][filtering]
@@ -38,6 +38,19 @@ use tracing_core::{
 /// without filtering on field values. When these features are not required,
 /// [`Targets`] provides a lighter-weight alternative to [`EnvFilter`].
 ///
+||||||| 386969ba
+=======
+/// `EnvFilter` implements both the [`Subscribe`](#impl-Subscribe<C>) and
+/// [`Filter`] traits, so it may be used for both [global filtering][global] and
+/// [per-subscriber filtering][psf], respectively. See [the documentation on
+/// filtering with `Subscriber`s][filtering]  for details.
+///
+/// The [`Targets`] type implements a similar form of filtering, but without the
+/// ability to dynamically enable events based on the current span context, and
+/// without filtering on field values. When these features are not required,
+/// [`Targets`] provides a lighter-weight alternative to [`EnvFilter`].
+///
+>>>>>>> origin/master
 /// # Directives
 ///
 /// A filter consists of one or more comma-separated directives which match on [`Span`]s and [`Event`]s.
@@ -118,6 +131,7 @@ use tracing_core::{
 ///    - which has a field named `name` with value `bob`,
 ///    - at _any_ level.
 ///
+<<<<<<< HEAD
 /// # Examples
 ///
 /// Parsing an `EnvFilter` from the [default environment
@@ -193,6 +207,94 @@ use tracing_core::{
 /// [plf]: crate::layer#per-layer-filtering
 /// [filtering]: crate::layer#filtering-with-layers
 #[cfg_attr(docsrs, doc(cfg(all(feature = "env-filter", feature = "std"))))]
+||||||| 386969ba
+/// [`Layer`]: ../layer/trait.Layer.html
+/// [`env_logger`]: https://docs.rs/env_logger/0.7.1/env_logger/#enabling-logging
+/// [`Span`]: https://docs.rs/tracing-core/latest/tracing_core/span/index.html
+/// [fields]: https://docs.rs/tracing-core/latest/tracing_core/struct.Field.html
+/// [`Event`]: https://docs.rs/tracing-core/latest/tracing_core/struct.Event.html
+/// [`level`]: https://docs.rs/tracing-core/latest/tracing_core/struct.Level.html
+/// [`Metadata`]: https://docs.rs/tracing-core/latest/tracing_core/struct.Metadata.html
+#[cfg(feature = "env-filter")]
+#[cfg_attr(docsrs, doc(cfg(feature = "env-filter")))]
+=======
+/// # Examples
+///
+/// Parsing an `EnvFilter` from the [default environment
+/// variable](EnvFilter::from_default_env) (`RUST_LOG`):
+///
+/// ```
+/// use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+///
+/// tracing_subscriber::registry()
+///     .with(fmt::subscriber())
+///     .with(EnvFilter::from_default_env())
+///     .init();
+/// ```
+///
+/// Parsing an `EnvFilter` [from a user-provided environment
+/// variable](EnvFilter::from_env):
+///
+/// ```
+/// use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+///
+/// tracing_subscriber::registry()
+///     .with(fmt::subscriber())
+///     .with(EnvFilter::from_env("MYAPP_LOG"))
+///     .init();
+/// ```
+///
+/// Using `EnvFilter` as a [per-subscriber filter][psf] to filter only a single
+/// [subscriber](crate::subscribe::Subscribe):
+///
+/// ```
+/// use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+///
+/// // Parse an `EnvFilter` configuration from the `RUST_LOG`
+/// // environment variable.
+/// let filter = EnvFilter::from_default_env();
+///
+/// // Apply the filter to this subscriber *only*.
+/// let filtered_subscriber = fmt::subscriber().with_filter(filter);
+///
+/// // Some other subscriber, whose output we don't want to filter.
+/// let unfiltered_subscriber = // ...
+///     # fmt::subscriber();
+///
+/// tracing_subscriber::registry()
+///     .with(filtered_subscriber)
+///     .with(unfiltered_subscriber)
+///     .init();
+/// ```
+/// # Constructing `EnvFilter`s
+///
+/// An `EnvFilter` is be constructed by parsing a string containing one or more
+/// directives. The [`EnvFilter::new`] constructor parses an `EnvFilter` from a
+/// string, ignoring any invalid directives, while [`EnvFilter::try_new`]
+/// returns an error if invalid directives are encountered. Similarly, the
+/// [`EnvFilter::from_env`] and [`EnvFilter::try_from_env`] constructors parse
+/// an `EnvFilter` from the value of the provided environment variable, with
+/// lossy and strict validation, respectively.
+///
+/// A [builder](EnvFilter::builder) interface is available to set additional
+/// configuration options prior to parsing an `EnvFilter`. See the [`Builder`
+/// type's documentation](Builder) for details on the options that can be
+/// configured using the builder.
+///
+/// [`Subscriber`]: Subscribe
+/// [`env_logger`]: https://docs.rs/env_logger/0.7.1/env_logger/#enabling-logging
+/// [`Span`]: tracing_core::span
+/// [fields]: tracing_core::Field
+/// [`Event`]: tracing_core::Event
+/// [`level`]: tracing_core::Level
+/// [`Metadata`]: tracing_core::Metadata
+/// [`Targets`]: crate::filter::Targets
+/// [`Filter`]: #impl-Filter<C>
+/// [global]: crate::subscribe#global-filtering
+/// [psf]: crate::subscribe#per-subscriber-filtering
+/// [filtering]: crate::subscribe#filtering-with-subscribers
+#[cfg_attr(docsrs, doc(cfg(all(feature = "env-filter", feature = "std"))))]
+>>>>>>> origin/master
 #[derive(Debug)]
 pub struct EnvFilter {
     statics: directive::Statics,
@@ -224,8 +326,14 @@ impl EnvFilter {
     /// `RUST_LOG` is the default environment variable used by
     /// [`EnvFilter::from_default_env`] and [`EnvFilter::try_from_default_env`].
     ///
+<<<<<<< HEAD
     /// [`EnvFilter::from_default_env`]: EnvFilter::from_default_env()
     /// [`EnvFilter::try_from_default_env`]: EnvFilter::try_from_default_env()
+||||||| 386969ba
+    /// [`EnvFilter::from_default_env`]: #method.from_default_env
+    /// [`EnvFilter::try_from_default_env`]: #method.try_from_default_env
+=======
+>>>>>>> origin/master
     pub const DEFAULT_ENV: &'static str = "RUST_LOG";
 
     // === constructors, etc ===
@@ -415,8 +523,15 @@ impl EnvFilter {
     /// and events as a previous filter, but sets a different level for those
     /// spans and events, the previous directive is overwritten.
     ///
+<<<<<<< HEAD
     /// [`LevelFilter`]: super::LevelFilter
     /// [`Level`]: tracing_core::Level
+||||||| 386969ba
+    /// [`LevelFilter`]: ../filter/struct.LevelFilter.html
+    /// [`Level`]: https://docs.rs/tracing-core/latest/tracing_core/struct.Level.html
+=======
+    /// [`Level`]: tracing_core::Level
+>>>>>>> origin/master
     ///
     /// # Examples
     ///
@@ -469,6 +584,7 @@ impl EnvFilter {
 
     // === filtering methods ===
 
+<<<<<<< HEAD
     /// Returns `true` if this `EnvFilter` would enable the provided `metadata`
     /// in the current context.
     ///
@@ -653,13 +769,209 @@ impl<S: Subscriber> Layer<S> for EnvFilter {
     #[inline]
     fn enabled(&self, metadata: &Metadata<'_>, ctx: Context<'_, S>) -> bool {
         self.enabled(metadata, ctx)
+||||||| 386969ba
+        if statics.is_empty() && !has_dynamics {
+            statics.add(directive::StaticDirective::default());
+        }
+
+        Self {
+            statics,
+            dynamics,
+            has_dynamics,
+            by_id: RwLock::new(HashMap::new()),
+            by_cs: RwLock::new(HashMap::new()),
+        }
     }
 
+    fn cares_about_span(&self, span: &span::Id) -> bool {
+        let spans = try_lock!(self.by_id.read(), else return false);
+        spans.contains_key(span)
+    }
+
+    fn base_interest(&self) -> Interest {
+        if self.has_dynamics {
+            Interest::sometimes()
+        } else {
+            Interest::never()
+        }
+    }
+}
+
+impl<S: Subscriber> Layer<S> for EnvFilter {
+    fn register_callsite(&self, metadata: &'static Metadata<'static>) -> Interest {
+        if self.has_dynamics && metadata.is_span() {
+            // If this metadata describes a span, first, check if there is a
+            // dynamic filter that should be constructed for it. If so, it
+            // should always be enabled, since it influences filtering.
+            if let Some(matcher) = self.dynamics.matcher(metadata) {
+                let mut by_cs = try_lock!(self.by_cs.write(), else return self.base_interest());
+                by_cs.insert(metadata.callsite(), matcher);
+                return Interest::always();
+            }
+        }
+
+        // Otherwise, check if any of our static filters enable this metadata.
+        if self.statics.enabled(metadata) {
+            Interest::always()
+        } else {
+            self.base_interest()
+        }
+    }
+
+    fn max_level_hint(&self) -> Option<LevelFilter> {
+        if self.dynamics.has_value_filters() {
+            // If we perform any filtering on span field *values*, we will
+            // enable *all* spans, because their field values are not known
+            // until recording.
+            return Some(LevelFilter::TRACE);
+        }
+        std::cmp::max(
+            self.statics.max_level.clone().into(),
+            self.dynamics.max_level.clone().into(),
+        )
+    }
+
+    fn enabled(&self, metadata: &Metadata<'_>, _: Context<'_, S>) -> bool {
+        let level = metadata.level();
+
+        // is it possible for a dynamic filter directive to enable this event?
+        // if not, we can avoid the thread local access + iterating over the
+        // spans in the current scope.
+        if self.has_dynamics && self.dynamics.max_level >= *level {
+            if metadata.is_span() {
+                // If the metadata is a span, see if we care about its callsite.
+                let enabled_by_cs = self
+                    .by_cs
+                    .read()
+                    .ok()
+                    .map(|by_cs| by_cs.contains_key(&metadata.callsite()))
+                    .unwrap_or(false);
+                if enabled_by_cs {
+                    return true;
+                }
+            }
+
+            let enabled_by_scope = SCOPE.with(|scope| {
+                for filter in scope.borrow().iter() {
+                    if filter >= level {
+                        return true;
+                    }
+                }
+                false
+            });
+            if enabled_by_scope {
+                return true;
+            }
+        }
+
+        // is it possible for a static filter directive to enable this event?
+        if self.statics.max_level >= *level {
+            // Otherwise, fall back to checking if the callsite is
+            // statically enabled.
+            return self.statics.enabled(metadata);
+        }
+
+        false
+=======
+    /// Returns `true` if this `EnvFilter` would enable the provided `metadata`
+    /// in the current context.
+    ///
+    /// This is equivalent to calling the [`Subscribe::enabled`] or
+    /// [`Filter::enabled`] methods on `EnvFilter`'s implementations of those
+    /// traits, but it does not require the trait to be in scope.
+    pub fn enabled<C>(&self, metadata: &Metadata<'_>, _: Context<'_, C>) -> bool {
+        let level = metadata.level();
+
+        // is it possible for a dynamic filter directive to enable this event?
+        // if not, we can avoid the thread local access + iterating over the
+        // spans in the current scope.
+        if self.has_dynamics && self.dynamics.max_level >= *level {
+            if metadata.is_span() {
+                // If the metadata is a span, see if we care about its callsite.
+                let enabled_by_cs = self
+                    .by_cs
+                    .read()
+                    .ok()
+                    .map(|by_cs| by_cs.contains_key(&metadata.callsite()))
+                    .unwrap_or(false);
+                if enabled_by_cs {
+                    return true;
+                }
+            }
+
+            let enabled_by_scope = {
+                let scope = self.scope.get_or_default().borrow();
+                for filter in &*scope {
+                    if filter >= level {
+                        return true;
+                    }
+                }
+                false
+            };
+            if enabled_by_scope {
+                return true;
+            }
+        }
+
+        // is it possible for a static filter directive to enable this event?
+        if self.statics.max_level >= *level {
+            // Otherwise, fall back to checking if the callsite is
+            // statically enabled.
+            return self.statics.enabled(metadata);
+        }
+
+        false
+>>>>>>> origin/master
+    }
+
+<<<<<<< HEAD
     #[inline]
     fn on_new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, ctx: Context<'_, S>) {
         self.on_new_span(attrs, id, ctx)
+||||||| 386969ba
+    fn new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, _: Context<'_, S>) {
+        let by_cs = try_lock!(self.by_cs.read());
+        if let Some(cs) = by_cs.get(&attrs.metadata().callsite()) {
+            let span = cs.to_span_match(attrs);
+            try_lock!(self.by_id.write()).insert(id.clone(), span);
+        }
+=======
+    /// Returns an optional hint of the highest [verbosity level][level] that
+    /// this `EnvFilter` will enable.
+    ///
+    /// This is equivalent to calling the [`Subscribe::max_level_hint`] or
+    /// [`Filter::max_level_hint`] methods on `EnvFilter`'s implementations of those
+    /// traits, but it does not require the trait to be in scope.
+    ///
+    /// [level]: tracing_core::metadata::Level
+    pub fn max_level_hint(&self) -> Option<LevelFilter> {
+        if self.dynamics.has_value_filters() {
+            // If we perform any filtering on span field *values*, we will
+            // enable *all* spans, because their field values are not known
+            // until recording.
+            return Some(LevelFilter::TRACE);
+        }
+        std::cmp::max(
+            self.statics.max_level.into(),
+            self.dynamics.max_level.into(),
+        )
     }
 
+    /// Informs the filter that a new span was created.
+    ///
+    /// This is equivalent to calling the [`Subscribe::on_new_span`] or
+    /// [`Filter::on_new_span`] methods on `EnvFilter`'s implementations of those
+    /// traits, but it does not require the trait to be in scope.
+    pub fn on_new_span<C>(&self, attrs: &span::Attributes<'_>, id: &span::Id, _: Context<'_, C>) {
+        let by_cs = try_lock!(self.by_cs.read());
+        if let Some(cs) = by_cs.get(&attrs.metadata().callsite()) {
+            let span = cs.to_span_match(attrs);
+            try_lock!(self.by_id.write()).insert(id.clone(), span);
+        }
+>>>>>>> origin/master
+    }
+
+<<<<<<< HEAD
     #[inline]
     fn on_record(&self, id: &span::Id, values: &span::Record<'_>, ctx: Context<'_, S>) {
         self.on_record(id, values, ctx);
@@ -668,13 +980,59 @@ impl<S: Subscriber> Layer<S> for EnvFilter {
     #[inline]
     fn on_enter(&self, id: &span::Id, ctx: Context<'_, S>) {
         self.on_enter(id, ctx);
+||||||| 386969ba
+    fn on_record(&self, id: &span::Id, values: &span::Record<'_>, _: Context<'_, S>) {
+        if let Some(span) = try_lock!(self.by_id.read()).get(id) {
+            span.record_update(values);
+        }
     }
 
+    fn on_enter(&self, id: &span::Id, _: Context<'_, S>) {
+        // XXX: This is where _we_ could push IDs to the stack instead, and use
+        // that to allow changing the filter while a span is already entered.
+        // But that might be much less efficient...
+        if let Some(span) = try_lock!(self.by_id.read()).get(id) {
+            SCOPE.with(|scope| scope.borrow_mut().push(span.level()));
+        }
+=======
+    /// Informs the filter that the span with the provided `id` was entered.
+    ///
+    /// This is equivalent to calling the [`Subscribe::on_enter`] or
+    /// [`Filter::on_enter`] methods on `EnvFilter`'s implementations of those
+    /// traits, but it does not require the trait to be in scope.
+    pub fn on_enter<C>(&self, id: &span::Id, _: Context<'_, C>) {
+        // XXX: This is where _we_ could push IDs to the stack instead, and use
+        // that to allow changing the filter while a span is already entered.
+        // But that might be much less efficient...
+        if let Some(span) = try_lock!(self.by_id.read()).get(id) {
+            self.scope.get_or_default().borrow_mut().push(span.level());
+        }
+>>>>>>> origin/master
+    }
+
+<<<<<<< HEAD
     #[inline]
     fn on_exit(&self, id: &span::Id, ctx: Context<'_, S>) {
         self.on_exit(id, ctx);
+||||||| 386969ba
+    fn on_exit(&self, id: &span::Id, _: Context<'_, S>) {
+        if self.cares_about_span(id) {
+            SCOPE.with(|scope| scope.borrow_mut().pop());
+        }
+=======
+    /// Informs the filter that the span with the provided `id` was exited.
+    ///
+    /// This is equivalent to calling the [`Subscribe::on_exit`] or
+    /// [`Filter::on_exit`] methods on `EnvFilter`'s implementations of those
+    /// traits, but it does not require the trait to be in scope.
+    pub fn on_exit<C>(&self, id: &span::Id, _: Context<'_, C>) {
+        if self.cares_about_span(id) {
+            self.scope.get_or_default().borrow_mut().pop();
+        }
+>>>>>>> origin/master
     }
 
+<<<<<<< HEAD
     #[inline]
     fn on_close(&self, id: span::Id, ctx: Context<'_, S>) {
         self.on_close(id, ctx);
@@ -689,6 +1047,22 @@ feature! {
         #[inline]
         fn enabled(&self, meta: &Metadata<'_>, ctx: &Context<'_, S>) -> bool {
             self.enabled(meta, ctx.clone())
+||||||| 386969ba
+    fn on_close(&self, id: span::Id, _: Context<'_, S>) {
+        // If we don't need to acquire a write lock, avoid doing so.
+        if !self.cares_about_span(&id) {
+            return;
+=======
+    /// Informs the filter that the span with the provided `id` was closed.
+    ///
+    /// This is equivalent to calling the [`Subscribe::on_close`] or
+    /// [`Filter::on_close`] methods on `EnvFilter`'s implementations of those
+    /// traits, but it does not require the trait to be in scope.
+    pub fn on_close<C>(&self, id: span::Id, _: Context<'_, C>) {
+        // If we don't need to acquire a write lock, avoid doing so.
+        if !self.cares_about_span(&id) {
+            return;
+>>>>>>> origin/master
         }
 
         #[inline]
@@ -723,6 +1097,140 @@ feature! {
 
         #[inline]
         fn on_close(&self, id: span::Id, ctx: Context<'_, S>) {
+            self.on_close(id, ctx);
+        }
+    }
+
+    /// Informs the filter that the span with the provided `id` recorded the
+    /// provided field `values`.
+    ///
+    /// This is equivalent to calling the [`Subscribe::on_record`] or
+    /// [`Filter::on_record`] methods on `EnvFilter`'s implementations of those
+    /// traits, but it does not require the trait to be in scope
+    pub fn on_record<C>(&self, id: &span::Id, values: &span::Record<'_>, _: Context<'_, C>) {
+        if let Some(span) = try_lock!(self.by_id.read()).get(id) {
+            span.record_update(values);
+        }
+    }
+
+    fn cares_about_span(&self, span: &span::Id) -> bool {
+        let spans = try_lock!(self.by_id.read(), else return false);
+        spans.contains_key(span)
+    }
+
+    fn base_interest(&self) -> Interest {
+        if self.has_dynamics {
+            Interest::sometimes()
+        } else {
+            Interest::never()
+        }
+    }
+
+    fn register_callsite(&self, metadata: &'static Metadata<'static>) -> Interest {
+        if self.has_dynamics && metadata.is_span() {
+            // If this metadata describes a span, first, check if there is a
+            // dynamic filter that should be constructed for it. If so, it
+            // should always be enabled, since it influences filtering.
+            if let Some(matcher) = self.dynamics.matcher(metadata) {
+                let mut by_cs = try_lock!(self.by_cs.write(), else return self.base_interest());
+                by_cs.insert(metadata.callsite(), matcher);
+                return Interest::always();
+            }
+        }
+
+        // Otherwise, check if any of our static filters enable this metadata.
+        if self.statics.enabled(metadata) {
+            Interest::always()
+        } else {
+            self.base_interest()
+        }
+    }
+}
+
+impl<C: Collect> Subscribe<C> for EnvFilter {
+    #[inline]
+    fn register_callsite(&self, metadata: &'static Metadata<'static>) -> Interest {
+        EnvFilter::register_callsite(self, metadata)
+    }
+
+    #[inline]
+    fn max_level_hint(&self) -> Option<LevelFilter> {
+        EnvFilter::max_level_hint(self)
+    }
+
+    #[inline]
+    fn enabled(&self, metadata: &Metadata<'_>, ctx: Context<'_, C>) -> bool {
+        self.enabled(metadata, ctx)
+    }
+
+    #[inline]
+    fn on_new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, ctx: Context<'_, C>) {
+        self.on_new_span(attrs, id, ctx)
+    }
+
+    #[inline]
+    fn on_record(&self, id: &span::Id, values: &span::Record<'_>, ctx: Context<'_, C>) {
+        self.on_record(id, values, ctx);
+    }
+
+    #[inline]
+    fn on_enter(&self, id: &span::Id, ctx: Context<'_, C>) {
+        self.on_enter(id, ctx);
+    }
+
+    #[inline]
+    fn on_exit(&self, id: &span::Id, ctx: Context<'_, C>) {
+        self.on_exit(id, ctx);
+    }
+
+    #[inline]
+    fn on_close(&self, id: span::Id, ctx: Context<'_, C>) {
+        self.on_close(id, ctx);
+    }
+}
+
+feature! {
+    #![all(feature = "registry", feature = "std")]
+    use crate::subscribe::Filter;
+
+    impl<C> Filter<C> for EnvFilter {
+        #[inline]
+        fn enabled(&self, meta: &Metadata<'_>, ctx: &Context<'_, C>) -> bool {
+            self.enabled(meta, ctx.clone())
+        }
+
+        #[inline]
+        fn callsite_enabled(&self, meta: &'static Metadata<'static>) -> Interest {
+            self.register_callsite(meta)
+        }
+
+        #[inline]
+        fn max_level_hint(&self) -> Option<LevelFilter> {
+            EnvFilter::max_level_hint(self)
+        }
+
+        #[inline]
+        fn on_new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, ctx: Context<'_, C>) {
+            self.on_new_span(attrs, id, ctx)
+        }
+
+        #[inline]
+        fn on_record(&self, id: &span::Id, values: &span::Record<'_>, ctx: Context<'_, C>) {
+            self.on_record(id, values, ctx);
+        }
+
+        #[inline]
+        fn on_enter(&self, id: &span::Id, ctx: Context<'_, C>) {
+            self.on_enter(id, ctx);
+        }
+
+        #[inline]
+        fn on_exit(&self, id: &span::Id, ctx: Context<'_, C>) {
+            self.on_exit(id, ctx);
+        }
+
+        #[inline]
+        fn on_close(&self, id: span::Id, ctx: Context<'_, C>) {
             self.on_close(id, ctx);
         }
     }
@@ -820,11 +1328,11 @@ mod tests {
     use tracing_core::field::FieldSet;
     use tracing_core::*;
 
-    struct NoSubscriber;
-    impl Subscriber for NoSubscriber {
+    struct NoCollector;
+    impl Collect for NoCollector {
         #[inline]
-        fn register_callsite(&self, _: &'static Metadata<'static>) -> subscriber::Interest {
-            subscriber::Interest::always()
+        fn register_callsite(&self, _: &'static Metadata<'static>) -> collect::Interest {
+            collect::Interest::always()
         }
         fn new_span(&self, _: &span::Attributes<'_>) -> span::Id {
             span::Id::from_u64(0xDEAD)
@@ -839,6 +1347,9 @@ mod tests {
         }
         fn enter(&self, _span: &span::Id) {}
         fn exit(&self, _span: &span::Id) {}
+        fn current_span(&self) -> span::Current {
+            span::Current::unknown()
+        }
     }
 
     struct Cs;
@@ -851,7 +1362,7 @@ mod tests {
 
     #[test]
     fn callsite_enabled_no_span_directive() {
-        let filter = EnvFilter::new("app=debug").with_subscriber(NoSubscriber);
+        let filter = EnvFilter::new("app=debug").with_collector(NoCollector);
         static META: &Metadata<'static> = &Metadata::new(
             "mySpan",
             "app",
@@ -869,7 +1380,7 @@ mod tests {
 
     #[test]
     fn callsite_off() {
-        let filter = EnvFilter::new("app=off").with_subscriber(NoSubscriber);
+        let filter = EnvFilter::new("app=off").with_collector(NoCollector);
         static META: &Metadata<'static> = &Metadata::new(
             "mySpan",
             "app",
@@ -887,7 +1398,7 @@ mod tests {
 
     #[test]
     fn callsite_enabled_includes_span_directive() {
-        let filter = EnvFilter::new("app[mySpan]=debug").with_subscriber(NoSubscriber);
+        let filter = EnvFilter::new("app[mySpan]=debug").with_collector(NoCollector);
         static META: &Metadata<'static> = &Metadata::new(
             "mySpan",
             "app",
@@ -906,7 +1417,7 @@ mod tests {
     #[test]
     fn callsite_enabled_includes_span_directive_field() {
         let filter =
-            EnvFilter::new("app[mySpan{field=\"value\"}]=debug").with_subscriber(NoSubscriber);
+            EnvFilter::new("app[mySpan{field=\"value\"}]=debug").with_collector(NoCollector);
         static META: &Metadata<'static> = &Metadata::new(
             "mySpan",
             "app",
@@ -925,7 +1436,7 @@ mod tests {
     #[test]
     fn callsite_enabled_includes_span_directive_multiple_fields() {
         let filter = EnvFilter::new("app[mySpan{field=\"value\",field2=2}]=debug")
-            .with_subscriber(NoSubscriber);
+            .with_collector(NoCollector);
         static META: &Metadata<'static> = &Metadata::new(
             "mySpan",
             "app",

@@ -5,6 +5,7 @@ use std::time::Instant;
 
 mod datetime;
 
+<<<<<<< HEAD
 #[cfg(feature = "time")]
 mod time_crate;
 
@@ -32,6 +33,32 @@ pub use chrono_crate::ChronoLocal;
 #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 pub use chrono_crate::ChronoUtc;
 
+||||||| 386969ba
+=======
+#[cfg(feature = "time")]
+mod time_crate;
+
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+pub use time_crate::UtcTime;
+
+#[cfg(feature = "local-time")]
+#[cfg_attr(docsrs, doc(cfg(all(unsound_local_offset, feature = "local-time"))))]
+pub use time_crate::LocalTime;
+
+/// [`chrono`]-based implementation for [`FormatTime`].
+#[cfg(feature = "chrono")]
+mod chrono_crate;
+
+#[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
+pub use chrono_crate::ChronoLocal;
+
+#[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
+pub use chrono_crate::ChronoUtc;
+
+>>>>>>> origin/master
 /// A type that can measure and format the current time.
 ///
 /// This trait is used by `Format` to include a timestamp with each `Event` when it is logged.

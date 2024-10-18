@@ -1,6 +1,6 @@
 //! Metadata describing trace data.
 use super::{callsite, field};
-use crate::stdlib::{
+use core::{
     cmp, fmt,
     str::FromStr,
     sync::atomic::{AtomicUsize, Ordering},
@@ -26,7 +26,7 @@ use crate::stdlib::{
 /// - The [line number]
 /// - The [module path]
 ///
-/// Metadata is used by [`Subscriber`]s when filtering spans and events, and it
+/// Metadata is used by [collector]s when filtering spans and events, and it
 /// may also be used as part of their data payload.
 ///
 /// When created by the `event!` or `span!` macro, the metadata describing a
@@ -37,6 +37,7 @@ use crate::stdlib::{
 ///
 /// ## Equality
 ///
+<<<<<<< HEAD
 /// In well-behaved applications, two `Metadata` with equal
 /// [callsite identifiers] will be equal in all other ways (i.e., have the same
 /// `name`, `target`, etc.). Consequently, in release builds, [`Metadata::eq`]
@@ -54,6 +55,38 @@ use crate::stdlib::{
 /// [module path]: Self::module_path
 /// [`Subscriber`]: super::subscriber::Subscriber
 /// [callsite identifiers]: Self::callsite
+||||||| 386969ba
+/// [span]: ../span/index.html
+/// [event]: ../event/index.html
+/// [name]: #method.name
+/// [target]: #method.target
+/// [fields]: #method.fields
+/// [verbosity level]: #method.level
+/// [file name]: #method.file
+/// [line number]: #method.line
+/// [module path]: #method.module
+/// [`Subscriber`]: ../subscriber/trait.Subscriber.html
+/// [`id`]: struct.Metadata.html#method.id
+/// [callsite identifier]: ../callsite/struct.Identifier.html
+=======
+/// In well-behaved applications, two `Metadata` with equal
+/// [callsite identifiers] will be equal in all other ways (i.e., have the same
+/// `name`, `target`, etc.). Consequently, in release builds, [`Metadata::eq`]
+/// *only* checks that its arguments have equal callsites. However, the equality
+/// of `Metadata`'s other fields is checked in debug builds.
+///
+/// [span]: super::span
+/// [event]: super::event
+/// [name]: Self::name
+/// [target]: Self::target
+/// [fields]: Self::fields
+/// [verbosity level]: Self::level
+/// [file name]: Self::file
+/// [line number]: Self::line
+/// [module path]: Self::module_path
+/// [collector]: super::collect::Collect
+/// [callsite identifiers]: Self::callsite
+>>>>>>> origin/master
 pub struct Metadata<'a> {
     /// The name of the span described by this metadata.
     name: &'static str,
@@ -90,6 +123,7 @@ pub struct Metadata<'a> {
 pub struct Kind(u8);
 
 /// Describes the level of verbosity of a span or event.
+<<<<<<< HEAD
 ///
 /// # Comparing Levels
 ///
@@ -218,6 +252,139 @@ pub struct Kind(u8);
 /// [`Subscriber`]: crate::subscriber::Subscriber
 /// [envfilter]: https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+||||||| 386969ba
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+=======
+///
+/// # Comparing Levels
+///
+/// `Level` implements the [`PartialOrd`] and [`Ord`] traits, allowing two
+/// `Level`s to be compared to determine which is considered more or less
+/// verbose. Levels which are more verbose are considered "greater than" levels
+/// which are less verbose, with [`Level::ERROR`] considered the lowest, and
+/// [`Level::TRACE`] considered the highest.
+///
+/// For example:
+/// ```
+/// use tracing_core::Level;
+///
+/// assert!(Level::TRACE > Level::DEBUG);
+/// assert!(Level::ERROR < Level::WARN);
+/// assert!(Level::INFO <= Level::DEBUG);
+/// assert_eq!(Level::TRACE, Level::TRACE);
+/// ```
+///
+/// # Filtering
+///
+/// `Level`s are typically used to implement filtering that determines which
+/// spans and events are enabled. Depending on the use case, more or less
+/// verbose diagnostics may be desired. For example, when running in
+/// development, [`DEBUG`]-level traces may be enabled by default. When running in
+/// production, only [`INFO`]-level and lower traces might be enabled. Libraries
+/// may include very verbose diagnostics at the [`DEBUG`] and/or [`TRACE`] levels.
+/// Applications using those libraries typically chose to ignore those traces. However, when
+/// debugging an issue involving said libraries, it may be useful to temporarily
+/// enable the more verbose traces.
+///
+/// The [`LevelFilter`] type is provided to enable filtering traces by
+/// verbosity. `Level`s can be compared against [`LevelFilter`]s, and
+/// [`LevelFilter`] has a variant for each `Level`, which compares analogously
+/// to that level. In addition, [`LevelFilter`] adds a [`LevelFilter::OFF`]
+/// variant, which is considered "less verbose" than every other `Level`. This is
+/// intended to allow filters to completely disable tracing in a particular context.
+///
+/// For example:
+/// ```
+/// use tracing_core::{Level, LevelFilter};
+///
+/// assert!(LevelFilter::OFF < Level::TRACE);
+/// assert!(LevelFilter::TRACE > Level::DEBUG);
+/// assert!(LevelFilter::ERROR < Level::WARN);
+/// assert!(LevelFilter::INFO <= Level::DEBUG);
+/// assert!(LevelFilter::INFO >= Level::INFO);
+/// ```
+///
+/// ## Examples
+///
+/// Below is a simple example of how a [collector] could implement filtering through
+/// a [`LevelFilter`]. When a span or event is recorded, the [`Collect::enabled`] method
+/// compares the span or event's `Level` against the configured [`LevelFilter`].
+/// The optional [`Collect::max_level_hint`] method can also be implemented to  allow spans
+/// and events above a maximum verbosity level to be skipped more efficiently,
+/// often improving performance in short-lived programs.
+///
+/// ```
+/// use tracing_core::{span, Event, Level, LevelFilter, Collect, Metadata};
+/// # use tracing_core::span::{Id, Record, Current};
+///
+/// #[derive(Debug)]
+/// pub struct MyCollector {
+///     /// The most verbose level that this collector will enable.
+///     max_level: LevelFilter,
+///
+///     // ...
+/// }
+///
+/// impl MyCollector {
+///     /// Returns a new `MyCollector` which will record spans and events up to
+///     /// `max_level`.
+///     pub fn with_max_level(max_level: LevelFilter) -> Self {
+///         Self {
+///             max_level,
+///             // ...
+///         }
+///     }
+/// }
+/// impl Collect for MyCollector {
+///     fn enabled(&self, meta: &Metadata<'_>) -> bool {
+///         // A span or event is enabled if it is at or below the configured
+///         // maximum level.
+///         meta.level() <= &self.max_level
+///     }
+///
+///     // This optional method returns the most verbose level that this
+///     // collector will enable. Although implementing this method is not
+///     // *required*, it permits additional optimizations when it is provided,
+///     // allowing spans and events above the max level to be skipped
+///     // more efficiently.
+///     fn max_level_hint(&self) -> Option<LevelFilter> {
+///         Some(self.max_level)
+///     }
+///
+///     // Implement the rest of the collector...
+///     fn new_span(&self, span: &span::Attributes<'_>) -> span::Id {
+///         // ...
+///         # drop(span); Id::from_u64(1)
+///     }
+
+///     fn event(&self, event: &Event<'_>) {
+///         // ...
+///         # drop(event);
+///     }
+///
+///     // ...
+///     # fn enter(&self, _: &Id) {}
+///     # fn exit(&self, _: &Id) {}
+///     # fn record(&self, _: &Id, _: &Record<'_>) {}
+///     # fn record_follows_from(&self, _: &Id, _: &Id) {}
+///     # fn current_span(&self) -> Current { Current::unknown() }
+/// }
+/// ```
+///
+/// It is worth noting that the `tracing-subscriber` crate provides [additional
+/// APIs][envfilter] for performing more sophisticated filtering, such as
+/// enabling different levels based on which module or crate a span or event is
+/// recorded in.
+///
+/// [`DEBUG`]: Level::DEBUG
+/// [`INFO`]: Level::INFO
+/// [`TRACE`]: Level::TRACE
+/// [`Collect::enabled`]: crate::collect::Collect::enabled
+/// [`Collect::max_level_hint`]: crate::collect::Collect::max_level_hint
+/// [collector]: crate::collect::Collect
+/// [envfilter]: https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+>>>>>>> origin/master
 pub struct Level(LevelInner);
 
 /// A filter comparable to a verbosity [`Level`].
@@ -374,12 +541,23 @@ impl Kind {
     pub const EVENT: Kind = Kind(Self::EVENT_BIT);
 
     /// `Span` callsite
+<<<<<<< HEAD
     pub const SPAN: Kind = Kind(Self::SPAN_BIT);
 
     /// `enabled!` callsite. [`Subscriber`][`crate::subscriber::Subscriber`]s can assume
     /// this `Kind` means they will never recieve a
     /// full event with this [`Metadata`].
     pub const HINT: Kind = Kind(Self::HINT_BIT);
+||||||| 386969ba
+    pub const SPAN: Kind = Kind(KindInner::Span);
+=======
+    pub const SPAN: Kind = Kind(Self::SPAN_BIT);
+
+    /// `enabled!` callsite. [`Collect`][`crate::collect::Collect`]s can assume
+    /// this `Kind` means they will never receive a
+    /// full event with this [`Metadata`].
+    pub const HINT: Kind = Kind(Self::HINT_BIT);
+>>>>>>> origin/master
 
     /// Return true if the callsite kind is `Span`
     pub fn is_span(&self) -> bool {
@@ -548,7 +726,7 @@ impl fmt::Display for Level {
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-impl crate::stdlib::error::Error for ParseLevelError {}
+impl std::error::Error for ParseLevelError {}
 
 impl FromStr for Level {
     type Err = ParseLevelError;
@@ -657,7 +835,15 @@ impl LevelFilter {
     /// Returns the most verbose [`Level`] that this filter accepts, or `None`
     /// if it is [`OFF`].
     ///
+<<<<<<< HEAD
     /// [`OFF`]: LevelFilter::OFF
+||||||| 386969ba
+    /// [`Level`]: ../struct.Level.html
+    /// [`OFF`]: #associatedconstant.OFF
+=======
+    /// [`Level`]: super::Level
+    /// [`OFF`]: LevelFilter::OFF
+>>>>>>> origin/master
     pub const fn into_level(self) -> Option<Level> {
         self.0
     }
@@ -677,12 +863,12 @@ impl LevelFilter {
     const OFF_USIZE: usize = LevelInner::Error as usize + 1;
 
     /// Returns a `LevelFilter` that matches the most verbose [`Level`] that any
-    /// currently active [`Subscriber`] will enable.
+    /// currently active [collector] will enable.
     ///
     /// User code should treat this as a *hint*. If a given span or event has a
     /// level *higher* than the returned `LevelFilter`, it will not be enabled.
     /// However, if the level is less than or equal to this value, the span or
-    /// event is *not* guaranteed to be enabled; the subscriber will still
+    /// event is *not* guaranteed to be enabled; the collector will still
     /// filter each callsite individually.
     ///
     /// Therefore, comparing a given span or event's level to the returned
@@ -690,8 +876,16 @@ impl LevelFilter {
     /// *disabled*, but **should not** be used for determining if something is
     /// *enabled*.
     ///
+<<<<<<< HEAD
     /// [`Level`]: super::Level
     /// [`Subscriber`]: super::Subscriber
+||||||| 386969ba
+    /// [`Level`]: ../struct.Level.html
+    /// [`Subscriber`]: ../../trait.Subscriber.html
+=======
+    /// [`Level`]: super::Level
+    /// [collector]: super::Collect
+>>>>>>> origin/master
     #[inline(always)]
     pub fn current() -> Self {
         match MAX_LEVEL.load(Ordering::Relaxed) {
@@ -729,7 +923,7 @@ impl LevelFilter {
                 // the inputs to `set_max` to the set of valid discriminants.
                 // Therefore, **as long as `MAX_VALUE` is only ever set by
                 // `set_max`**, this is safe.
-                crate::stdlib::hint::unreachable_unchecked()
+                core::hint::unreachable_unchecked()
             },
         }
     }
@@ -1047,7 +1241,7 @@ impl PartialOrd<Level> for LevelFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::stdlib::mem;
+    use core::mem;
 
     #[test]
     fn level_from_str() {

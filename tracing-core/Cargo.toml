@@ -7,8 +7,16 @@ name = "tracing-core"
 #   - Cargo.toml
 #   - README.md
 # - Update CHANGELOG.md.
+<<<<<<< HEAD
 # - Create "v0.1.x" git tag.
 version = "0.1.32"
+||||||| 386969ba
+# - Create "v0.1.x" git tag.
+version = "0.1.17"
+=======
+# - Create "v0.2.x" git tag.
+version = "0.2.0"
+>>>>>>> origin/master
 authors = ["Tokio Contributors <team@tokio.rs>"]
 license = "MIT"
 readme = "README.md"
@@ -27,22 +35,50 @@ edition = "2018"
 rust-version = "1.63.0"
 
 [features]
+<<<<<<< HEAD
 default = ["std", "valuable/std"]
 std = ["once_cell"]
+||||||| 386969ba
+default = ["std"]
+std = ["lazy_static"]
+=======
+default = ["std"]
+alloc = []
+std = ["once_cell", "alloc"]
+>>>>>>> origin/master
 
 [badges]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
+<<<<<<< HEAD
 once_cell = { version = "1.13.0", optional = true }
 
 [target.'cfg(tracing_unstable)'.dependencies]
 valuable = { version = "0.1.0", optional = true, default-features = false }
+||||||| 386969ba
+lazy_static = { version = "1", optional = true }
+=======
+once_cell = { version = "1.13.0", optional = true }
+>>>>>>> origin/master
 
 [package.metadata.docs.rs]
 all-features = true
+<<<<<<< HEAD
 # enable unstable features in the documentation
 rustdoc-args = ["--cfg", "docsrs", "--cfg", "tracing_unstable"]
 # it's necessary to _also_ pass `--cfg tracing_unstable` to rustc, or else
 # dependencies will not be enabled, and the docs build will fail.
 rustc-args = ["--cfg", "tracing_unstable"]
+||||||| 386969ba
+rustdoc-args = ["--cfg", "docsrs"]
+=======
+# enable unstable features in the documentation
+rustdoc-args = ["--cfg", "docsrs", "--cfg", "tracing_unstable"]
+# it's necessary to _also_ pass `--cfg tracing_unstable` to rustc, or else
+# dependencies will not be enabled, and the docs build will fail.
+rustc-args = ["--cfg", "tracing_unstable"]
+
+[lints]
+workspace = true
+>>>>>>> origin/master

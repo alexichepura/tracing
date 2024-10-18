@@ -1,9 +1,16 @@
 use test_log_support::Test;
+<<<<<<< HEAD
 use tracing::{error, info, span, trace, warn, Level};
+||||||| 386969ba
+use tracing::Level;
+=======
+use tracing::{error, info, span, trace, warn, Level};
+use tracing_core::span::Current;
+>>>>>>> origin/master
 
-pub struct NopSubscriber;
+pub struct NopCollector;
 
-impl tracing::Subscriber for NopSubscriber {
+impl tracing::Collect for NopCollector {
     fn enabled(&self, _: &tracing::Metadata) -> bool {
         true
     }
@@ -20,12 +27,15 @@ impl tracing::Subscriber for NopSubscriber {
     fn try_close(&self, _: tracing::span::Id) -> bool {
         true
     }
+    fn current_span(&self) -> Current {
+        Current::unknown()
+    }
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn log_with_trace() {
-    tracing::subscriber::set_global_default(NopSubscriber).expect("set global should succeed");
+    tracing::collect::set_global_default(NopCollector).expect("set global should succeed");
 
     let test = Test::start();
 

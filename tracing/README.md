@@ -144,8 +144,8 @@ use std::{error::Error, io};
 use tracing::{debug, error, info, span, warn, Level};
 
 // the `#[tracing::instrument]` attribute creates and enters a span
-// every time the instrumented function is called. The span is named after the
-// the function or method. Paramaters passed to the function are recorded as fields.
+// every time the instrumented function is called. The span is named after
+// the function or method. Parameters passed to the function are recorded as fields.
 #[tracing::instrument]
 pub fn shave(yak: usize) -> Result<(), Box<dyn Error + 'static>> {
     // this creates an event at the DEBUG level with two fields:
@@ -185,7 +185,7 @@ pub fn shave_all(yaks: usize) -> usize {
 
         if let Err(ref error) = res {
             // Like spans, events can also use the field initialization shorthand.
-            // In this instance, `yak` is the field being initalized.
+            // In this instance, `yak` is the field being initialized.
             error!(yak, error = error.as_ref(), "failed to shave yak!");
         } else {
             yaks_shaved += 1;
@@ -328,6 +328,7 @@ be invoked with the same syntax as the similarly-named macros from the `log`
 crate. Often, the process of converting a project to use `tracing` can begin
 with a simple drop-in replacement.
 
+<<<<<<< HEAD
 ## Supported Rust Versions
 
 Tracing is built against the latest stable release. The minimum supported
@@ -342,6 +343,23 @@ past 1.42, three minor versions prior. Increasing the minimum supported compiler
 version is not considered a semver breaking change as long as doing so complies
 with this policy.
 
+||||||| 386969ba
+## Supported Rust Versions
+
+Tracing is built against the latest stable release. The minimum supported
+version is 1.40. The current Tracing version is not guaranteed to build on Rust
+versions earlier than the minimum supported version.
+
+Tracing follows the same compiler support policies as the rest of the Tokio
+project. The current stable Rust compiler and the three most recent minor
+versions before it will always be supported. For example, if the current stable
+compiler version is 1.45, the minimum supported version will not be increased
+past 1.42, three minor versions prior. Increasing the minimum supported compiler
+version is not considered a semver breaking change as long as doing so complies
+with this policy.
+
+=======
+>>>>>>> origin/master
 ## Ecosystem
 
 ### Related Crates
@@ -366,6 +384,9 @@ In particular, the following crates are likely to be of interest:
   dependencies which use `log`. Note that if you're using
   `tracing-subscriber`'s `FmtSubscriber`, you don't need to depend on
   `tracing-log` directly.
+- [`tracing-opentelemetry`]: Provides a layer that connects spans from multiple
+  systems into a trace and emits them to [OpenTelemetry]-compatible distributed
+  tracing systems for processing and visualization.
 
 Additionally, there are also several third-party crates which are not
 maintained by the `tokio` project. These include:
@@ -373,8 +394,6 @@ maintained by the `tokio` project. These include:
 - [`tracing-timing`] implements inter-event timing metrics on top of `tracing`.
   It provides a subscriber that records the time elapsed between pairs of
   `tracing` events and generates histograms.
-- [`tracing-opentelemetry`] provides a subscriber for emitting traces to
-  [OpenTelemetry]-compatible distributed tracing systems.
 - [`tracing-honeycomb`] Provides a layer that reports traces spanning multiple machines to [honeycomb.io]. Backed by [`tracing-distributed`].
 - [`tracing-distributed`] Provides a generic implementation of a layer that reports traces spanning multiple machines to some backend.
 - [`tracing-actix`] provides `tracing` integration for the `actix` actor

@@ -11,41 +11,107 @@ default = []
 [dev-dependencies]
 
 # tracing crates
+<<<<<<< HEAD
 tracing = { path = "../tracing", version = "0.1.35" }
 tracing-core = { path = "../tracing-core", version = "0.1.28" }
+||||||| 386969ba
+tracing = { path = "../tracing", version = "0.1"}
+tracing-core = { path = "../tracing-core", version = "0.1"}
+=======
+tracing = { path = "../tracing", version = "0.2"}
+tracing-core = { path = "../tracing-core", version = "0.2"}
+>>>>>>> origin/master
 tracing-error = { path = "../tracing-error" }
 tracing-flame = { path = "../tracing-flame" }
 tracing-tower = { version = "0.1.0", path = "../tracing-tower" }
+<<<<<<< HEAD
 tracing-subscriber = { path = "../tracing-subscriber", version = "0.3.0", features = ["json", "env-filter"] }
 tracing-futures = { version = "0.2.1", path = "../tracing-futures", features = ["futures-01"] }
 tracing-attributes = { path = "../tracing-attributes", version = "0.1.22" }
+||||||| 386969ba
+tracing-subscriber = { path = "../tracing-subscriber", version = "0.2.12", features = ["json", "chrono"] }
+tracing-futures = { version = "0.2.1", path = "../tracing-futures", features = ["futures-01"] }
+tracing-attributes =  { path = "../tracing-attributes", version = "0.1.2"}
+tracing-log = { path = "../tracing-log", version = "0.1.1", features = ["env_logger"] }
+=======
+tracing-subscriber = { path = "../tracing-subscriber", version = "0.3", features = ["json", "env-filter"] }
+tracing-futures = { version = "0.3", path = "../tracing-futures", features = ["futures-01"] }
+tracing-attributes =  { path = "../tracing-attributes", version = "0.2"}
+tracing-log = { path = "../tracing-log", version = "0.2", features = ["env_logger"] }
+>>>>>>> origin/master
 tracing-serde = { path = "../tracing-serde" }
+<<<<<<< HEAD
 tracing-appender = { path = "../tracing-appender", version = "0.2.0" }
+||||||| 386969ba
+tracing-opentelemetry = { path = "../tracing-opentelemetry" }
+=======
+tracing-appender = { path = "../tracing-appender" }
+>>>>>>> origin/master
 tracing-journald = { path = "../tracing-journald" }
 
 # serde example
 serde_json = "1.0.82"
 
+<<<<<<< HEAD
 futures = "0.3.21"
 tokio = { version = "1.20.1", features = ["full"] }
+||||||| 386969ba
+futures = "0.3"
+tokio = { version = "0.2.12", features = ["full"] }
+
+# env-logger example
+env_logger = "0.7"
+=======
+futures = "0.3.21"
+tokio = { version = "1.20.0", features = ["full"] }
+>>>>>>> origin/master
 
 # tower examples
+<<<<<<< HEAD
 tower = { version = "0.4.13", features = ["full"] }
 http = "0.2.8"
 hyper = { version = "0.14.20", features = ["full"] }
 rand = "0.7.3"
 bytes = "1"
 argh = "0.1.8"
+||||||| 386969ba
+tower = "0.3"
+tower-util = "0.3.1"
+tower-make = "0.3"
+http = "0.2"
+hyper = "0.13.2"
+rand = "0.7"
+bytes = "0.5"
+clap = "2.33"
+=======
+tower = { version = "0.4.13", features = ["full"] }
+http = "0.2.8"
+hyper = { version = "0.14.20", features = ["full"] }
+rand = "0.7.3"
+bytes = "1.2.0"
+argh = "0.1.8"
+>>>>>>> origin/master
 
 # sloggish example
 nu-ansi-term = "0.46.0"
 humantime = "2.1.0"
 log = "0.4.17"
 
+<<<<<<< HEAD
 # inferno example
 inferno = "0.11.6"
 tempfile = "3"
+||||||| 386969ba
+# infero example
+inferno = "0.10.0"
+tempdir = "0.3.7"
+=======
+# inferno example
+inferno = "0.11.6"
+tempfile = "3.3.0"
+>>>>>>> origin/master
 
+<<<<<<< HEAD
 # fmt examples
 snafu = "0.6.10"
 thiserror = "1.0.31"
@@ -56,3 +122,15 @@ valuable = { version = "0.1.0", features = ["derive"] }
 [target.'cfg(tracing_unstable)'.dependencies]
 tracing-core = { path = "../tracing-core", version = "0.1.28", features = ["valuable"]}
 tracing-subscriber = { path = "../tracing-subscriber", version = "0.3.0", features = ["json", "env-filter", "valuable"]}
+||||||| 386969ba
+# opentelemetry example
+opentelemetry = { version = "0.8", default-features = false, features = ["trace"] }
+opentelemetry-jaeger = "0.7"
+=======
+# fmt examples
+snafu = "0.6.10"
+thiserror = "1.0.31"
+
+[lints]
+workspace = true
+>>>>>>> origin/master

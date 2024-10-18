@@ -7,8 +7,16 @@ name = "tracing-attributes"
 #   - Cargo.toml
 #   - README.md
 # - Update CHANGELOG.md.
+<<<<<<< HEAD
 # - Create "v0.1.x" git tag.
 version = "0.1.27"
+||||||| 386969ba
+# - Create "v0.1.x" git tag.
+version = "0.1.11"
+=======
+# - Create "v0.2.x" git tag.
+version = "0.2.0"
+>>>>>>> origin/master
 authors = [
     "Tokio Contributors <team@tokio.rs>",
     "Eliza Weisman <eliza@buoyant.io>",
@@ -33,17 +41,32 @@ rust-version = "1.63.0"
 [lib]
 proc-macro = true
 
-[features]
-
-# This feature flag is no longer necessary.
-async-await = []
-
 [dependencies]
+<<<<<<< HEAD
 proc-macro2 = "1.0.60"
 syn = { version = "2.0", default-features = false, features = ["full", "parsing", "printing", "visit-mut", "clone-impls", "extra-traits", "proc-macro"] }
 quote = "1.0.20"
+||||||| 386969ba
+proc-macro2 = "1"
+syn = { version = "1", default-features = false, features = ["full", "parsing", "printing", "visit-mut", "clone-impls", "extra-traits", "proc-macro"] }
+quote = "1"
+
+=======
+proc-macro2 = "1.0.60"
+syn = { version = "2.0", default-features = false, features = [
+    "full",
+    "parsing",
+    "printing",
+    "visit-mut",
+    "clone-impls",
+    "extra-traits",
+    "proc-macro",
+] }
+quote = "1.0.20"
+>>>>>>> origin/master
 
 [dev-dependencies]
+<<<<<<< HEAD
 tracing = { path = "../tracing", version = "0.1.35" }
 tracing-mock = { path = "../tracing-mock", features = ["tokio-test"] }
 tracing-subscriber = { path = "../tracing-subscriber", version = "0.3.0", features = ["env-filter"] }
@@ -51,6 +74,26 @@ tokio-test = "0.4.2"
 async-trait = "0.1.67"
 trybuild = "1.0.64"
 rustversion = "1.0.9"
+||||||| 386969ba
+tracing = { path = "../tracing", version = "0.1" }
+tokio-test = { version = "0.2.0" }
+tracing-core = { path = "../tracing-core", version = "0.1"}
+async-trait = "0.1"
+=======
+tracing = { path = "../tracing", version = "0.2" }
+tracing-mock = { path = "../tracing-mock" }
+tokio-test = "0.4.2"
+tracing-subscriber = { path = "../tracing-subscriber", version = "0.3", features = [
+    "env-filter",
+] }
+tracing-test = { path = "../tracing-test" }
+async-trait = "0.1.67"
+trybuild = "1.0.64"
+rustversion = "1.0.9"
+>>>>>>> origin/master
 
 [badges]
 maintenance = { status = "experimental" }
+
+[lints]
+workspace = true

@@ -2,7 +2,7 @@
 //!
 //! This module provides the [`LogTracer`] type which implements `log`'s [logger
 //! interface] by recording log records as `tracing` `Event`s. This is intended for
-//! use in conjunction with a `tracing` `Subscriber` to consume events from
+//! use in conjunction with a `tracing` `Collector` to consume events from
 //! dependencies that emit [`log`] records within a trace context.
 //!
 //! # Usage
@@ -10,7 +10,7 @@
 //! To create and initialize a `LogTracer` with the default configurations, use:
 //!
 //! * [`init`] if you want to convert all logs, regardless of log level,
-//!   allowing the tracing `Subscriber` to perform any filtering
+//!   allowing the tracing `Collector` to perform any filtering
 //! * [`init_with_filter`] to convert all logs up to a specified log level
 //!
 //! In addition, a [builder] is available for cases where more advanced
@@ -26,7 +26,7 @@
 //! [ignore]: Builder::ignore_crate()
 use crate::AsTrace;
 pub use log::SetLoggerError;
-use tracing_core::dispatcher;
+use tracing_core::dispatch;
 
 /// A simple "logger" that converts all log records into `tracing` `Event`s.
 #[derive(Debug)]
@@ -55,7 +55,7 @@ impl LogTracer {
     /// use tracing_log::LogTracer;
     /// use log;
     ///
-    /// # fn main() -> Result<(), Box<Error>> {
+    /// # fn main() -> Result<(), Box<dyn Error>> {
     /// LogTracer::builder()
     ///     .ignore_crate("foo") // suppose the `foo` crate is using `tracing`'s log feature
     ///     .with_max_level(log::LevelFilter::Info)
@@ -82,7 +82,7 @@ impl LogTracer {
     /// use tracing_log::LogTracer;
     /// use log;
     ///
-    /// # fn main() -> Result<(), Box<Error>> {
+    /// # fn main() -> Result<(), Box<dyn Error>> {
     /// let logger = LogTracer::new();
     /// log::set_boxed_logger(Box::new(logger))?;
     /// log::set_max_level(log::LevelFilter::Trace);
@@ -125,7 +125,7 @@ impl LogTracer {
     /// use tracing_log::LogTracer;
     /// use log;
     ///
-    /// # fn main() -> Result<(), Box<Error>> {
+    /// # fn main() -> Result<(), Box<dyn Error>> {
     /// LogTracer::init()?;
     ///
     /// // will be available for Subscribers as a tracing Event
@@ -134,7 +134,7 @@ impl LogTracer {
     /// # }
     /// ```
     ///
-    /// This will forward all logs to `tracing` and lets the current `Subscriber`
+    /// This will forward all logs to `tracing` and lets the current `Collector`
     /// determine if they are enabled.
     ///
     /// The [`builder`] function can be used to customize the `LogTracer` before
@@ -175,6 +175,7 @@ impl log::Log for LogTracer {
             return false;
         }
 
+<<<<<<< HEAD
         // Okay, it wasn't disabled by the max level — do we have any specific
         // modules to ignore?
         if !self.ignore_crates.is_empty() {
@@ -192,6 +193,31 @@ impl log::Log for LogTracer {
             // Finally, check if the current `tracing` dispatcher cares about this.
             dispatcher::get_default(|dispatch| dispatch.enabled(&metadata.as_trace()))
         })
+||||||| 386969ba
+        // If we are ignoring certain module paths, ensure that the metadata
+        // does not start with one of those paths.
+        let target = metadata.target();
+        !self
+            .ignore_crates
+            .iter()
+            .any(|ignored| target.starts_with(ignored))
+=======
+        // Okay, it wasn't disabled by the max level — do we have any specific
+        // modules to ignore?
+        if !self.ignore_crates.is_empty() {
+            // If we are ignoring certain module paths, ensure that the metadata
+            // does not start with one of those paths.
+            let target = metadata.target();
+            for ignored in &self.ignore_crates[..] {
+                if target.starts_with(ignored) {
+                    return false;
+                }
+            }
+        }
+
+        // Finally, check if the current `tracing` dispatcher cares about this.
+        dispatch::get_default(|dispatch| dispatch.enabled(&metadata.as_trace()))
+>>>>>>> origin/master
     }
 
     fn log(&self, record: &log::Record<'_>) {

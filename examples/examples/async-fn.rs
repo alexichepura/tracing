@@ -1,3 +1,6 @@
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
+//!
 //! Demonstrates using the `trace` attribute macro to instrument `async`
 //! functions.
 //!
@@ -7,11 +10,11 @@
 //!
 //! You can test this out by running:
 //!
-//!     ncat -l 6142
+//!     nc -l 6142
 //!
 //! And then in another terminal run:
 //!
-//!     cargo +nightly run --example async_fn
+//!     cargo run --example async-fn
 //!
 //! [`hello_world`]: https://github.com/tokio-rs/tokio/blob/132e9f1da5965530b63554d7a1c59824c3de4e30/tokio/examples/hello_world.rs
 #![deny(rust_2018_idioms)]

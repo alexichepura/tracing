@@ -1,12 +1,25 @@
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
 #![deny(rust_2018_idioms)]
 #[path = "fmt/yak_shave.rs"]
 mod yak_shave;
 
 fn main() {
     tracing_subscriber::fmt()
+<<<<<<< HEAD
         // enable everything
         .with_max_level(tracing::Level::TRACE)
         // sets this to be the default, global subscriber for this application.
+||||||| 386969ba
+        // all spans/events with a level higher than DEBUG (e.g, info, warn, etc.)
+        // will be written to stdout.
+        .with_max_level(Level::DEBUG)
+        // sets this to be the default, global subscriber for this application.
+=======
+        // enable everything
+        .with_max_level(tracing::Level::TRACE)
+        // sets this to be the default, global collector for this application.
+>>>>>>> origin/master
         .init();
 
     let number_of_yaks = 3;

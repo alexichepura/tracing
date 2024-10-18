@@ -4,21 +4,41 @@
 //! These fields consist of a mapping from a key (corresponding to a `&str` but
 //! represented internally as an array index) to a [`Value`].
 //!
-//! # `Value`s and `Subscriber`s
+//! # `Value`s and `Collect`s
 //!
+<<<<<<< HEAD
 //! `Subscriber`s consume `Value`s as fields attached to [span]s or [`Event`]s.
 //! The set of field keys on a given span or event is defined on its [`Metadata`].
 //! When a span is created, it provides [`Attributes`] to the `Subscriber`'s
+||||||| 386969ba
+//! `Subscriber`s consume `Value`s as fields attached to [span]s or [`Event`]s.
+//! The set of field keys on a given span or is defined on its [`Metadata`].
+//! When a span is created, it provides [`Attributes`] to the `Subscriber`'s
+=======
+//! Collectors consume `Value`s as fields attached to [span]s or [`Event`]s.
+//! The set of field keys on a given span or event is defined on its [`Metadata`].
+//! When a span is created, it provides [`Attributes`] to the collector's
+>>>>>>> origin/master
 //! [`new_span`] method, containing any fields whose values were provided when
-//! the span was created; and may call the `Subscriber`'s [`record`] method
+//! the span was created; and may call the collector's [`record`] method
 //! with additional [`Record`]s if values are added for more of its fields.
-//! Similarly, the [`Event`] type passed to the subscriber's [`event`] method
+//! Similarly, the [`Event`] type passed to the collector's [`event`] method
 //! will contain any fields attached to each event.
 //!
 //! `tracing` represents values as either one of a set of Rust primitives
+<<<<<<< HEAD
 //! (`i64`, `u64`, `f64`, `i128`, `u128`, `bool`, and `&str`) or using a
 //! `fmt::Display` or `fmt::Debug` implementation. `Subscriber`s are provided
 //! these primitive value types as `dyn Value` trait objects.
+||||||| 386969ba
+//! (`i64`, `u64`, `bool`, and `&str`) or using a `fmt::Display` or `fmt::Debug`
+//! implementation. `Subscriber`s are provided these primitive value types as
+//! `dyn Value` trait objects.
+=======
+//! (`i64`, `u64`, `f64`, `i128`, `u128`, `bool`, and `&str`) or using a
+//! `fmt::Display` or `fmt::Debug` implementation. Collectors are provided
+//! these primitive value types as `dyn Value` trait objects.
+>>>>>>> origin/master
 //!
 //! These trait objects can be formatted using `fmt::Debug`, but may also be
 //! recorded as typed data by calling the [`Value::record`] method on these
@@ -27,6 +47,7 @@
 //! an implementation of `Visit` might record integers by incrementing counters
 //! for their field names rather than printing them.
 //!
+<<<<<<< HEAD
 //!
 //! # Using `valuable`
 //!
@@ -109,10 +130,32 @@
 //! [`record`]: super::subscriber::Subscriber::record
 //! [`event`]:  super::subscriber::Subscriber::event
 //! [`Value::record`]: Value::record
+||||||| 386969ba
+//! [`Value`]: trait.Value.html
+//! [span]: ../span/
+//! [`Event`]: ../event/struct.Event.html
+//! [`Metadata`]: ../metadata/struct.Metadata.html
+//! [`Attributes`]:  ../span/struct.Attributes.html
+//! [`Record`]: ../span/struct.Record.html
+//! [`new_span`]: ../subscriber/trait.Subscriber.html#method.new_span
+//! [`record`]: ../subscriber/trait.Subscriber.html#method.record
+//! [`event`]:  ../subscriber/trait.Subscriber.html#method.event
+//! [`Value::record`]: trait.Value.html#method.record
+//! [`Visit`]: trait.Visit.html
+=======
+//! [span]: super::span
+//! [`Event`]: super::event::Event
+//! [`Metadata`]: super::metadata::Metadata
+//! [`Attributes`]:  super::span::Attributes
+//! [`Record`]: super::span::Record
+//! [`new_span`]: super::collect::Collect::new_span
+//! [`record`]: super::collect::Collect::record
+//! [`event`]:  super::collect::Collect::event
+>>>>>>> origin/master
 use crate::callsite;
-use crate::stdlib::{
+use core::{
     borrow::Borrow,
-    fmt,
+    fmt::{self, Write},
     hash::{Hash, Hasher},
     num,
     ops::Range,
@@ -127,7 +170,7 @@ use self::private::ValidLen;
 /// As keys are defined by the _metadata_ of a span, rather than by an
 /// individual instance of a span, a key may be used to access the same field
 /// across all instances of a given span with the same metadata. Thus, when a
-/// subscriber observes a new span, it need only access a field by name _once_,
+/// collector observes a new span, it need only access a field by name _once_,
 /// and use the key for that name for all other accesses.
 #[derive(Debug)]
 pub struct Field {
@@ -182,7 +225,7 @@ pub struct Iter {
 /// [recorded], it calls the appropriate method on the provided visitor to
 /// indicate the type that value should be recorded as.
 ///
-/// When a [`Subscriber`] implementation [records an `Event`] or a
+/// When a [`Collect`] implementation [records an `Event`] or a
 /// [set of `Value`s added to a `Span`], it can pass an `&mut Visit` to the
 /// `record` method on the provided [`ValueSet`] or [`Event`]. This visitor
 /// will then be used to record all the field-value pairs present on that
@@ -239,7 +282,7 @@ pub struct Iter {
 ///         self.sum += value as i64;
 ///     }
 ///
-///     fn record_debug(&mut self, _field: &Field, _value: &fmt::Debug) {
+///     fn record_debug(&mut self, _field: &Field, _value: &dyn fmt::Debug) {
 ///         // Do nothing
 ///     }
 /// }
@@ -258,12 +301,29 @@ pub struct Iter {
 /// <code>std::error::Error</code> trait.
 /// </pre></div>
 ///
+<<<<<<< HEAD
 /// [recorded]: Value::record
 /// [`Subscriber`]: super::subscriber::Subscriber
 /// [records an `Event`]: super::subscriber::Subscriber::event
 /// [set of `Value`s added to a `Span`]: super::subscriber::Subscriber::record
 /// [`Event`]: super::event::Event
+||||||| 386969ba
+/// [`Value`]: trait.Value.html
+/// [recorded]: trait.Value.html#method.record
+/// [`Subscriber`]: ../subscriber/trait.Subscriber.html
+/// [records an `Event`]: ../subscriber/trait.Subscriber.html#method.event
+/// [set of `Value`s added to a `Span`]: ../subscriber/trait.Subscriber.html#method.record
+/// [`Event`]: ../event/struct.Event.html
+/// [`ValueSet`]: struct.ValueSet.html
+=======
+/// [recorded]: Value::record
+/// [`Collect`]: super::collect::Collect
+/// [records an `Event`]: super::collect::Collect::event
+/// [set of `Value`s added to a `Span`]: super::collect::Collect::record
+/// [`Event`]: super::event::Event
+>>>>>>> origin/master
 pub trait Visit {
+<<<<<<< HEAD
     /// Visits an arbitrary type implementing the [`valuable`] crate's `Valuable` trait.
     ///
     /// [`valuable`]: https://docs.rs/valuable
@@ -278,6 +338,14 @@ pub trait Visit {
         self.record_debug(field, &value)
     }
 
+||||||| 386969ba
+=======
+    /// Visit a double-precision floating point value.
+    fn record_f64(&mut self, field: &Field, value: f64) {
+        self.record_debug(field, &value)
+    }
+
+>>>>>>> origin/master
     /// Visit a signed 64-bit integer value.
     fn record_i64(&mut self, field: &Field, value: i64) {
         self.record_debug(field, &value)
@@ -306,6 +374,11 @@ pub trait Visit {
     /// Visit a string value.
     fn record_str(&mut self, field: &Field, value: &str) {
         self.record_debug(field, &value)
+    }
+
+    /// Visit a byte slice.
+    fn record_bytes(&mut self, field: &Field, value: &[u8]) {
+        self.record_debug(field, &HexBytes(value))
     }
 
     /// Records a type implementing `Error`.
@@ -367,6 +440,7 @@ where
     DebugValue(t)
 }
 
+<<<<<<< HEAD
 /// Wraps a type implementing [`Valuable`] as a `Value` that
 /// can be recorded using its `Valuable` implementation.
 ///
@@ -380,6 +454,29 @@ where
     t.as_value()
 }
 
+||||||| 386969ba
+=======
+struct HexBytes<'a>(&'a [u8]);
+
+impl<'a> fmt::Debug for HexBytes<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_char('[')?;
+
+        let mut bytes = self.0.iter();
+
+        if let Some(byte) = bytes.next() {
+            f.write_fmt(format_args!("{byte:02x}"))?;
+        }
+
+        for byte in bytes {
+            f.write_fmt(format_args!(" {byte:02x}"))?;
+        }
+
+        f.write_char(']')
+    }
+}
+
+>>>>>>> origin/master
 // ===== impl Visit =====
 
 impl<'a, 'b> Visit for fmt::DebugStruct<'a, 'b> {
@@ -536,7 +633,21 @@ impl crate::sealed::Sealed for str {}
 
 impl Value for str {
     fn record(&self, key: &Field, visitor: &mut dyn Visit) {
+<<<<<<< HEAD
         visitor.record_str(key, self)
+||||||| 386969ba
+        visitor.record_str(key, &self)
+=======
+        visitor.record_str(key, self)
+    }
+}
+
+impl crate::sealed::Sealed for [u8] {}
+
+impl Value for [u8] {
+    fn record(&self, key: &Field, visitor: &mut dyn Visit) {
+        visitor.record_bytes(key, self)
+>>>>>>> origin/master
     }
 }
 
@@ -616,6 +727,7 @@ impl<'a> Value for fmt::Arguments<'a> {
     }
 }
 
+<<<<<<< HEAD
 impl<T: ?Sized> crate::sealed::Sealed for crate::stdlib::boxed::Box<T> where T: Value {}
 
 impl<T: ?Sized> Value for crate::stdlib::boxed::Box<T>
@@ -635,6 +747,36 @@ impl Value for String {
     }
 }
 
+||||||| 386969ba
+=======
+#[cfg(feature = "alloc")]
+impl<T: ?Sized> crate::sealed::Sealed for alloc::boxed::Box<T> where T: Value {}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<T: ?Sized> Value for alloc::boxed::Box<T>
+where
+    T: Value,
+{
+    #[inline]
+    fn record(&self, key: &Field, visitor: &mut dyn Visit) {
+        self.as_ref().record(key, visitor)
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl crate::sealed::Sealed for alloc::string::String {}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl Value for alloc::string::String {
+    fn record(&self, key: &Field, visitor: &mut dyn Visit) {
+        visitor.record_str(key, self.as_str())
+    }
+}
+
+>>>>>>> origin/master
 impl fmt::Debug for dyn Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // We are only going to be recording the field value, so we don't
@@ -642,7 +784,7 @@ impl fmt::Debug for dyn Value {
         struct NullCallsite;
         static NULL_CALLSITE: NullCallsite = NullCallsite;
         impl crate::callsite::Callsite for NullCallsite {
-            fn set_interest(&self, _: crate::subscriber::Interest) {
+            fn set_interest(&self, _: crate::collect::Interest) {
                 unreachable!("you somehow managed to register the null callsite?")
             }
 
@@ -710,6 +852,7 @@ where
 
 impl<T: fmt::Debug> fmt::Debug for DebugValue<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+<<<<<<< HEAD
         self.0.fmt(f)
     }
 }
@@ -735,6 +878,11 @@ impl crate::sealed::Sealed for &'_ dyn valuable::Valuable {}
 impl Value for &'_ dyn valuable::Valuable {
     fn record(&self, key: &Field, visitor: &mut dyn Visit) {
         visitor.record_value(key, self.as_value())
+||||||| 386969ba
+        write!(f, "{:?}", self.0)
+=======
+        self.0.fmt(f)
+>>>>>>> origin/master
     }
 }
 
@@ -835,10 +983,18 @@ impl FieldSet {
 
     /// Returns the [`Field`] named `name`, or `None` if no such field exists.
     ///
+<<<<<<< HEAD
     /// [`Field`]: super::Field
     pub fn field<Q: ?Sized>(&self, name: &Q) -> Option<Field>
+||||||| 386969ba
+    /// [`Field`]: ../struct.Field.html
+    pub fn field<Q: ?Sized>(&self, name: &Q) -> Option<Field>
+=======
+    /// [`Field`]: super::Field
+    pub fn field<Q>(&self, name: &Q) -> Option<Field>
+>>>>>>> origin/master
     where
-        Q: Borrow<str>,
+        Q: Borrow<str> + ?Sized,
     {
         let name = &name.borrow();
         self.names.iter().position(|f| f == name).map(|i| Field {
@@ -1087,11 +1243,19 @@ mod private {
 mod test {
     use super::*;
     use crate::metadata::{Kind, Level, Metadata};
-    use crate::stdlib::{borrow::ToOwned, string::String};
 
+<<<<<<< HEAD
     // Make sure TEST_CALLSITE_* have non-zero size, so they can't be located at the same address.
     struct TestCallsite1(u8);
     static TEST_CALLSITE_1: TestCallsite1 = TestCallsite1(0);
+||||||| 386969ba
+    struct TestCallsite1;
+    static TEST_CALLSITE_1: TestCallsite1 = TestCallsite1;
+=======
+    // Make sure TEST_CALLSITE_* have non-zero size, so they can't be located at the same address.
+    struct TestCallsite1();
+    static TEST_CALLSITE_1: TestCallsite1 = TestCallsite1();
+>>>>>>> origin/master
     static TEST_META_1: Metadata<'static> = metadata! {
         name: "field_test1",
         target: module_path!(),
@@ -1102,7 +1266,7 @@ mod test {
     };
 
     impl crate::callsite::Callsite for TestCallsite1 {
-        fn set_interest(&self, _: crate::subscriber::Interest) {
+        fn set_interest(&self, _: crate::collect::Interest) {
             unimplemented!()
         }
 
@@ -1111,8 +1275,16 @@ mod test {
         }
     }
 
+<<<<<<< HEAD
     struct TestCallsite2(u8);
     static TEST_CALLSITE_2: TestCallsite2 = TestCallsite2(0);
+||||||| 386969ba
+    struct TestCallsite2;
+    static TEST_CALLSITE_2: TestCallsite2 = TestCallsite2;
+=======
+    struct TestCallsite2();
+    static TEST_CALLSITE_2: TestCallsite2 = TestCallsite2();
+>>>>>>> origin/master
     static TEST_META_2: Metadata<'static> = metadata! {
         name: "field_test2",
         target: module_path!(),
@@ -1123,7 +1295,7 @@ mod test {
     };
 
     impl crate::callsite::Callsite for TestCallsite2 {
-        fn set_interest(&self, _: crate::subscriber::Interest) {
+        fn set_interest(&self, _: crate::collect::Interest) {
             unimplemented!()
         }
 
@@ -1189,7 +1361,7 @@ mod test {
 
         struct MyVisitor;
         impl Visit for MyVisitor {
-            fn record_debug(&mut self, field: &Field, _: &dyn (crate::stdlib::fmt::Debug)) {
+            fn record_debug(&mut self, field: &Field, _: &dyn (core::fmt::Debug)) {
                 assert_eq!(field.callsite(), TEST_META_1.callsite())
             }
         }
@@ -1208,7 +1380,7 @@ mod test {
 
         struct MyVisitor;
         impl Visit for MyVisitor {
-            fn record_debug(&mut self, field: &Field, _: &dyn (crate::stdlib::fmt::Debug)) {
+            fn record_debug(&mut self, field: &Field, _: &dyn (core::fmt::Debug)) {
                 assert_eq!(field.name(), "bar")
             }
         }
@@ -1217,6 +1389,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn record_debug_fn() {
         let fields = TEST_META_1.fields();
         let values = &[
@@ -1227,10 +1400,49 @@ mod test {
         let valueset = fields.value_set(values);
         let mut result = String::new();
         valueset.record(&mut |_: &Field, value: &dyn fmt::Debug| {
-            use crate::stdlib::fmt::Write;
+            use core::fmt::Write;
             write!(&mut result, "{:?}", value).unwrap();
         });
-        assert_eq!(result, "123".to_owned());
+        assert_eq!(result, String::from("123"));
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn record_error() {
+        let fields = TEST_META_1.fields();
+        let err: Box<dyn std::error::Error + Send + Sync + 'static> =
+            std::io::Error::new(std::io::ErrorKind::Other, "lol").into();
+        let values = &[
+            (&fields.field("foo").unwrap(), Some(&err as &dyn Value)),
+            (&fields.field("bar").unwrap(), Some(&Empty as &dyn Value)),
+            (&fields.field("baz").unwrap(), Some(&Empty as &dyn Value)),
+        ];
+        let valueset = fields.value_set(values);
+        let mut result = String::new();
+        valueset.record(&mut |_: &Field, value: &dyn fmt::Debug| {
+            use core::fmt::Write;
+            write!(&mut result, "{:?}", value).unwrap();
+        });
+        assert_eq!(result, format!("{}", err));
+    }
+
+    #[test]
+    fn record_bytes() {
+        let fields = TEST_META_1.fields();
+        let first = &b"abc"[..];
+        let second: &[u8] = &[192, 255, 238];
+        let values = &[
+            (&fields.field("foo").unwrap(), Some(&first as &dyn Value)),
+            (&fields.field("bar").unwrap(), Some(&" " as &dyn Value)),
+            (&fields.field("baz").unwrap(), Some(&second as &dyn Value)),
+        ];
+        let valueset = fields.value_set(values);
+        let mut result = String::new();
+        valueset.record(&mut |_: &Field, value: &dyn fmt::Debug| {
+            use core::fmt::Write;
+            write!(&mut result, "{:?}", value).unwrap();
+        });
+        assert_eq!(result, format!("{}", r#"[61 62 63]" "[c0 ff ee]"#));
     }
 
     #[test]

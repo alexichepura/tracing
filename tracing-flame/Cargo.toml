@@ -26,10 +26,26 @@ default = ["smallvec"]
 smallvec = ["tracing-subscriber/smallvec"]
 
 [dependencies]
+<<<<<<< HEAD
 tracing-subscriber = { path = "../tracing-subscriber", version = "0.3.0", default-features = false, features = ["registry", "fmt"] }
 tracing = { path = "../tracing", version = "0.1.35", default-features = false, features = ["std"] }
 once_cell = "1.13.0"
 
+||||||| 386969ba
+tracing-subscriber = { path = "../tracing-subscriber", version = "0.2.3", default-features = false, features = ["registry", "fmt"] }
+tracing = { path = "../tracing", version = "0.1.12"}
+lazy_static = "1.3.0"
+=======
+tracing-subscriber = { path = "../tracing-subscriber", version = "0.3", default-features = false, features = ["registry", "fmt"] }
+tracing = { path = "../tracing", version = "0.2", default-features = false, features = ["std"] }
+once_cell = "1.13.0"
+>>>>>>> origin/master
 
 [dev-dependencies]
+<<<<<<< HEAD
 tempfile = "3"
+||||||| 386969ba
+tempdir = "0.3.7"
+=======
+tempfile = "3.3.0"
+>>>>>>> origin/master

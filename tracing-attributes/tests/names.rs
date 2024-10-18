@@ -1,4 +1,13 @@
+<<<<<<< HEAD
 use tracing::subscriber::with_default;
+||||||| 386969ba
+mod support;
+use support::*;
+
+use tracing::subscriber::with_default;
+=======
+use tracing::collect::with_default;
+>>>>>>> origin/master
 use tracing_attributes::instrument;
 use tracing_mock::*;
 
@@ -16,14 +25,28 @@ fn custom_name_no_equals() {}
 
 #[test]
 fn default_name_test() {
+<<<<<<< HEAD
     let (subscriber, handle) = subscriber::mock()
         .new_span(expect::span().named("default_name"))
         .enter(expect::span().named("default_name"))
         .exit(expect::span().named("default_name"))
         .only()
+||||||| 386969ba
+    let (subscriber, handle) = subscriber::mock()
+        .new_span(span::mock().named("default_name"))
+        .enter(span::mock().named("default_name"))
+        .exit(span::mock().named("default_name"))
+        .done()
+=======
+    let (collector, handle) = collector::mock()
+        .new_span(expect::span().named("default_name"))
+        .enter(expect::span().named("default_name"))
+        .exit(expect::span().named("default_name"))
+        .only()
+>>>>>>> origin/master
         .run_with_handle();
 
-    with_default(subscriber, || {
+    with_default(collector, || {
         default_name();
     });
 
@@ -32,14 +55,28 @@ fn default_name_test() {
 
 #[test]
 fn custom_name_test() {
+<<<<<<< HEAD
     let (subscriber, handle) = subscriber::mock()
         .new_span(expect::span().named("my_name"))
         .enter(expect::span().named("my_name"))
         .exit(expect::span().named("my_name"))
         .only()
+||||||| 386969ba
+    let (subscriber, handle) = subscriber::mock()
+        .new_span(span::mock().named("my_name"))
+        .enter(span::mock().named("my_name"))
+        .exit(span::mock().named("my_name"))
+        .done()
+=======
+    let (collector, handle) = collector::mock()
+        .new_span(expect::span().named("my_name"))
+        .enter(expect::span().named("my_name"))
+        .exit(expect::span().named("my_name"))
+        .only()
+>>>>>>> origin/master
         .run_with_handle();
 
-    with_default(subscriber, || {
+    with_default(collector, || {
         custom_name();
     });
 
@@ -48,14 +85,28 @@ fn custom_name_test() {
 
 #[test]
 fn custom_name_no_equals_test() {
+<<<<<<< HEAD
     let (subscriber, handle) = subscriber::mock()
         .new_span(expect::span().named("my_other_name"))
         .enter(expect::span().named("my_other_name"))
         .exit(expect::span().named("my_other_name"))
         .only()
+||||||| 386969ba
+    let (subscriber, handle) = subscriber::mock()
+        .new_span(span::mock().named("my_other_name"))
+        .enter(span::mock().named("my_other_name"))
+        .exit(span::mock().named("my_other_name"))
+        .done()
+=======
+    let (collector, handle) = collector::mock()
+        .new_span(expect::span().named("my_other_name"))
+        .enter(expect::span().named("my_other_name"))
+        .exit(expect::span().named("my_other_name"))
+        .only()
+>>>>>>> origin/master
         .run_with_handle();
 
-    with_default(subscriber, || {
+    with_default(collector, || {
         custom_name_no_equals();
     });
 

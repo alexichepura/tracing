@@ -7,11 +7,24 @@
 #![cfg(feature = "std")]
 
 use tracing::{
+<<<<<<< HEAD
     debug, error,
+||||||| 386969ba
+=======
+    collect::with_default,
+    debug, error,
+>>>>>>> origin/master
     field::{debug, display},
+<<<<<<< HEAD
     info,
     subscriber::with_default,
     trace, warn, Level,
+||||||| 386969ba
+    subscriber::with_default,
+    Level,
+=======
+    info, trace, warn, Level,
+>>>>>>> origin/master
 };
 use tracing_mock::*;
 
@@ -20,7 +33,7 @@ macro_rules! event_without_message {
         #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
         #[test]
         fn $name() {
-            let (subscriber, handle) = subscriber::mock()
+            let (collector, handle) = collector::mock()
                 .event(
                     expect::event().with_fields(
                         expect::field("answer")
@@ -35,7 +48,7 @@ macro_rules! event_without_message {
                 .only()
                 .run_with_handle();
 
-            with_default(subscriber, || {
+            with_default(collector, || {
                 info!(
                     answer = $e,
                     to_question = "life, the universe, and everything"
@@ -56,6 +69,7 @@ event_without_message! {nonzeroi32_event_without_message: std::num::NonZeroI32::
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn event_with_message() {
+<<<<<<< HEAD
     let (subscriber, handle) = subscriber::mock()
         .event(
             expect::event().with_fields(expect::field("message").with_value(
@@ -66,10 +80,36 @@ fn event_with_message() {
             )),
         )
         .only()
+||||||| 386969ba
+    let (subscriber, handle) = subscriber::mock()
+        .event(event::mock().with_fields(field::mock("message").with_value(
+            &tracing::field::debug(format_args!("hello from my event! yak shaved = {:?}", true)),
+        )))
+        .done()
+=======
+    let (collector, handle) = collector::mock()
+        .event(
+            expect::event().with_fields(expect::field("message").with_value(
+                &tracing::field::debug(format_args!(
+                    "hello from my tracing::event! yak shaved = {:?}",
+                    true
+                )),
+            )),
+        )
+        .only()
+>>>>>>> origin/master
         .run_with_handle();
 
+<<<<<<< HEAD
     with_default(subscriber, || {
         debug!("hello from my tracing::event! yak shaved = {:?}", true);
+||||||| 386969ba
+    with_default(subscriber, || {
+        debug!("hello from my event! yak shaved = {:?}", true);
+=======
+    with_default(collector, || {
+        debug!("hello from my tracing::event! yak shaved = {:?}", true);
+>>>>>>> origin/master
     });
 
     handle.assert_finished();
@@ -78,7 +118,7 @@ fn event_with_message() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn message_without_delims() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("answer")
@@ -86,17 +126,25 @@ fn message_without_delims() {
                     .and(
                         expect::field("question").with_value(&"life, the universe, and everything"),
                     )
+<<<<<<< HEAD
                     .and(field::msg(format_args!(
                         "hello from my event! tricky? {:?}!",
                         true
                     )))
+||||||| 386969ba
+=======
+                    .and(expect::message(format_args!(
+                        "hello from my event! tricky? {:?}!",
+                        true
+                    )))
+>>>>>>> origin/master
                     .only(),
             ),
         )
         .only()
         .run_with_handle();
 
-    with_default(subscriber, || {
+    with_default(collector, || {
         let question = "life, the universe, and everything";
         debug!(answer = 42, question, "hello from {where}! tricky? {:?}!", true, where = "my event");
     });
@@ -107,7 +155,7 @@ fn message_without_delims() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn string_message_without_delims() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("answer")
@@ -115,14 +163,19 @@ fn string_message_without_delims() {
                     .and(
                         expect::field("question").with_value(&"life, the universe, and everything"),
                     )
+<<<<<<< HEAD
                     .and(field::msg(format_args!("hello from my event")))
+||||||| 386969ba
+=======
+                    .and(expect::message(format_args!("hello from my event")))
+>>>>>>> origin/master
                     .only(),
             ),
         )
         .only()
         .run_with_handle();
 
-    with_default(subscriber, || {
+    with_default(collector, || {
         let question = "life, the universe, and everything";
         debug!(answer = 42, question, "hello from my event");
     });
@@ -133,7 +186,7 @@ fn string_message_without_delims() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn one_with_everything() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event()
                 .with_fields(
@@ -154,8 +207,16 @@ fn one_with_everything() {
         .only()
         .run_with_handle();
 
+<<<<<<< HEAD
     with_default(subscriber, || {
         tracing::event!(
+||||||| 386969ba
+    with_default(subscriber, || {
+        event!(
+=======
+    with_default(collector, || {
+        tracing::event!(
+>>>>>>> origin/master
             target: "whatever",
             Level::ERROR,
             { foo = 666, bar = false, like_a_butterfly = 42.0 },
@@ -169,7 +230,7 @@ fn one_with_everything() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn moved_field() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("foo")
@@ -179,7 +240,7 @@ fn moved_field() {
         )
         .only()
         .run_with_handle();
-    with_default(subscriber, || {
+    with_default(collector, || {
         let from = "my event";
         tracing::event!(Level::INFO, foo = display(format!("hello from {}", from)))
     });
@@ -190,7 +251,7 @@ fn moved_field() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn dotted_field_name() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("foo.bar")
@@ -201,8 +262,16 @@ fn dotted_field_name() {
         )
         .only()
         .run_with_handle();
+<<<<<<< HEAD
     with_default(subscriber, || {
         tracing::event!(Level::INFO, foo.bar = true, foo.baz = false);
+||||||| 386969ba
+    with_default(subscriber, || {
+        event!(Level::INFO, foo.bar = true, foo.baz = false);
+=======
+    with_default(collector, || {
+        tracing::event!(Level::INFO, foo.bar = true, foo.baz = false);
+>>>>>>> origin/master
     });
 
     handle.assert_finished();
@@ -211,7 +280,7 @@ fn dotted_field_name() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn borrowed_field() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("foo")
@@ -221,7 +290,7 @@ fn borrowed_field() {
         )
         .only()
         .run_with_handle();
-    with_default(subscriber, || {
+    with_default(collector, || {
         let from = "my event";
         let mut message = format!("hello from {}", from);
         tracing::event!(Level::INFO, foo = display(&message));
@@ -248,7 +317,7 @@ fn move_field_out_of_struct() {
         x: 3.234,
         y: -1.223,
     };
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("x")
@@ -261,7 +330,7 @@ fn move_field_out_of_struct() {
         .only()
         .run_with_handle();
 
-    with_default(subscriber, || {
+    with_default(collector, || {
         let pos = Position {
             x: 3.234,
             y: -1.223,
@@ -275,7 +344,7 @@ fn move_field_out_of_struct() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn display_shorthand() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("my_field")
@@ -285,8 +354,16 @@ fn display_shorthand() {
         )
         .only()
         .run_with_handle();
+<<<<<<< HEAD
     with_default(subscriber, || {
         tracing::event!(Level::TRACE, my_field = %"hello world");
+||||||| 386969ba
+    with_default(subscriber, || {
+        event!(Level::TRACE, my_field = %"hello world");
+=======
+    with_default(collector, || {
+        tracing::event!(Level::TRACE, my_field = %"hello world");
+>>>>>>> origin/master
     });
 
     handle.assert_finished();
@@ -295,7 +372,7 @@ fn display_shorthand() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn debug_shorthand() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("my_field")
@@ -305,8 +382,16 @@ fn debug_shorthand() {
         )
         .only()
         .run_with_handle();
+<<<<<<< HEAD
     with_default(subscriber, || {
         tracing::event!(Level::TRACE, my_field = ?"hello world");
+||||||| 386969ba
+    with_default(subscriber, || {
+        event!(Level::TRACE, my_field = ?"hello world");
+=======
+    with_default(collector, || {
+        tracing::event!(Level::TRACE, my_field = ?"hello world");
+>>>>>>> origin/master
     });
 
     handle.assert_finished();
@@ -315,7 +400,7 @@ fn debug_shorthand() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn both_shorthands() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .event(
             expect::event().with_fields(
                 expect::field("display_field")
@@ -326,8 +411,16 @@ fn both_shorthands() {
         )
         .only()
         .run_with_handle();
+<<<<<<< HEAD
     with_default(subscriber, || {
         tracing::event!(Level::TRACE, display_field = %"hello world", debug_field = ?"hello world");
+||||||| 386969ba
+    with_default(subscriber, || {
+        event!(Level::TRACE, display_field = %"hello world", debug_field = ?"hello world");
+=======
+    with_default(collector, || {
+        tracing::event!(Level::TRACE, display_field = %"hello world", debug_field = ?"hello world");
+>>>>>>> origin/master
     });
 
     handle.assert_finished();
@@ -336,15 +429,37 @@ fn both_shorthands() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn explicit_child() {
+<<<<<<< HEAD
     let (subscriber, handle) = subscriber::mock()
         .new_span(expect::span().named("foo"))
         .event(expect::event().with_explicit_parent(Some("foo")))
         .only()
+||||||| 386969ba
+    let (subscriber, handle) = subscriber::mock()
+        .new_span(span::mock().named("foo"))
+        .event(event::mock().with_explicit_parent(Some("foo")))
+        .done()
+=======
+    let (collector, handle) = collector::mock()
+        .new_span(expect::span().named("foo"))
+        .event(expect::event().with_ancestry(expect::has_explicit_parent("foo")))
+        .only()
+>>>>>>> origin/master
         .run_with_handle();
 
+<<<<<<< HEAD
     with_default(subscriber, || {
         let foo = tracing::span!(Level::TRACE, "foo");
         tracing::event!(parent: foo.id(), Level::TRACE, "bar");
+||||||| 386969ba
+    with_default(subscriber, || {
+        let foo = span!(Level::TRACE, "foo");
+        event!(parent: foo.id(), Level::TRACE, "bar");
+=======
+    with_default(collector, || {
+        let foo = tracing::span!(Level::TRACE, "foo");
+        tracing::event!(parent: foo.id(), Level::TRACE, "bar");
+>>>>>>> origin/master
     });
 
     handle.assert_finished();
@@ -353,6 +468,7 @@ fn explicit_child() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
 fn explicit_child_at_levels() {
+<<<<<<< HEAD
     let (subscriber, handle) = subscriber::mock()
         .new_span(expect::span().named("foo"))
         .event(expect::event().with_explicit_parent(Some("foo")))
@@ -361,10 +477,37 @@ fn explicit_child_at_levels() {
         .event(expect::event().with_explicit_parent(Some("foo")))
         .event(expect::event().with_explicit_parent(Some("foo")))
         .only()
+||||||| 386969ba
+    let (subscriber, handle) = subscriber::mock()
+        .new_span(span::mock().named("foo"))
+        .event(event::mock().with_explicit_parent(Some("foo")))
+        .event(event::mock().with_explicit_parent(Some("foo")))
+        .event(event::mock().with_explicit_parent(Some("foo")))
+        .event(event::mock().with_explicit_parent(Some("foo")))
+        .event(event::mock().with_explicit_parent(Some("foo")))
+        .done()
+=======
+    let (collector, handle) = collector::mock()
+        .new_span(expect::span().named("foo"))
+        .event(expect::event().with_ancestry(expect::has_explicit_parent("foo")))
+        .event(expect::event().with_ancestry(expect::has_explicit_parent("foo")))
+        .event(expect::event().with_ancestry(expect::has_explicit_parent("foo")))
+        .event(expect::event().with_ancestry(expect::has_explicit_parent("foo")))
+        .event(expect::event().with_ancestry(expect::has_explicit_parent("foo")))
+        .only()
+>>>>>>> origin/master
         .run_with_handle();
 
+<<<<<<< HEAD
     with_default(subscriber, || {
         let foo = tracing::span!(Level::TRACE, "foo");
+||||||| 386969ba
+    with_default(subscriber, || {
+        let foo = span!(Level::TRACE, "foo");
+=======
+    with_default(collector, || {
+        let foo = tracing::span!(Level::TRACE, "foo");
+>>>>>>> origin/master
         trace!(parent: foo.id(), "a");
         debug!(parent: foo.id(), "b");
         info!(parent: foo.id(), "c");
@@ -374,6 +517,7 @@ fn explicit_child_at_levels() {
 
     handle.assert_finished();
 }
+<<<<<<< HEAD
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[test]
@@ -552,3 +696,142 @@ fn constant_field_name() {
 
     handle.assert_finished();
 }
+||||||| 386969ba
+=======
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[test]
+fn string_field() {
+    let (collector, handle) = collector::mock()
+        .event(expect::event().with_fields(expect::field("my_string").with_value(&"hello").only()))
+        .event(
+            expect::event().with_fields(
+                expect::field("my_string")
+                    .with_value(&"hello world!")
+                    .only(),
+            ),
+        )
+        .only()
+        .run_with_handle();
+    with_default(collector, || {
+        let mut my_string = String::from("hello");
+
+        tracing::event!(Level::INFO, my_string);
+
+        // the string is not moved by using it as a field!
+        my_string.push_str(" world!");
+
+        tracing::event!(Level::INFO, my_string);
+    });
+
+    handle.assert_finished();
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[test]
+fn constant_field_name() {
+    let expect_event = || {
+        expect::event().with_fields(
+            expect::field("foo")
+                .with_value(&"bar")
+                .and(expect::field("constant string").with_value(&"also works"))
+                .and(expect::field("foo.bar").with_value(&"baz"))
+                .and(expect::field("message").with_value(&debug(format_args!("quux"))))
+                .only(),
+        )
+    };
+    let (collector, handle) = collector::mock()
+        .event(expect_event())
+        .event(expect_event())
+        .event(expect_event())
+        .event(expect_event())
+        .event(expect_event())
+        .event(expect_event())
+        .event(expect_event())
+        .event(expect_event())
+        .only()
+        .run_with_handle();
+
+    with_default(collector, || {
+        const FOO: &str = "foo";
+        tracing::event!(
+            Level::INFO,
+            { std::convert::identity(FOO) } = "bar",
+            { "constant string" } = "also works",
+            foo.bar = "baz",
+            "quux"
+        );
+        tracing::event!(
+            Level::INFO,
+            {
+                { std::convert::identity(FOO) } = "bar",
+                { "constant string" } = "also works",
+                foo.bar = "baz",
+            },
+            "quux"
+        );
+        tracing::info!(
+            { std::convert::identity(FOO) } = "bar",
+            { "constant string" } = "also works",
+            foo.bar = "baz",
+            "quux"
+        );
+        tracing::info!(
+            {
+                { std::convert::identity(FOO) } = "bar",
+                { "constant string" } = "also works",
+                foo.bar = "baz",
+            },
+            "quux"
+        );
+        tracing::event!(
+            Level::INFO,
+            { std::convert::identity(FOO) } = "bar",
+            { "constant string" } = "also works",
+            foo.bar = "baz",
+            "{}",
+            "quux"
+        );
+        tracing::event!(
+            Level::INFO,
+            {
+                { std::convert::identity(FOO) } = "bar",
+                { "constant string" } = "also works",
+                foo.bar = "baz",
+            },
+            "{}",
+            "quux"
+        );
+        tracing::info!(
+            { std::convert::identity(FOO) } = "bar",
+            { "constant string" } = "also works",
+            foo.bar = "baz",
+            "{}",
+            "quux"
+        );
+        tracing::info!(
+            {
+                { std::convert::identity(FOO) } = "bar",
+                { "constant string" } = "also works",
+                foo.bar = "baz",
+            },
+            "{}",
+            "quux"
+        );
+    });
+
+    handle.assert_finished();
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[test]
+fn keyword_ident_in_field_name() {
+    let (collector, handle) = collector::mock()
+        .event(expect::event().with_fields(expect::field("crate").with_value(&"tracing")))
+        .only()
+        .run_with_handle();
+
+    with_default(collector, || error!(crate = "tracing", "message"));
+    handle.assert_finished();
+}
+>>>>>>> origin/master

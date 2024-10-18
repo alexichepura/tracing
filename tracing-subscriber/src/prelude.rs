@@ -3,14 +3,11 @@
 //! This brings into scope a number of extension traits that define methods on
 //! types defined here and in other crates.
 
-pub use crate::field::{
-    MakeExt as __tracing_subscriber_field_MakeExt,
-    RecordFields as __tracing_subscriber_field_RecordFields,
-};
-pub use crate::layer::{
-    Layer as __tracing_subscriber_Layer, SubscriberExt as __tracing_subscriber_SubscriberExt,
-};
-
+// apparently `as _` reexpoorts now generate `unreachable_pub` linting? which
+// seems wrong to me...
+#![allow(unreachable_pub)]
+pub use crate::field::{MakeExt as _, RecordFields as _};
+pub use crate::subscribe::{CollectExt as _, Subscribe as _};
 pub use crate::util::SubscriberInitExt as _;
 
 feature! {

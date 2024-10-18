@@ -21,19 +21,42 @@ rust-version = "1.63.0"
 default = ["log-tracer", "std"]
 std = ["log/std"]
 log-tracer = []
+<<<<<<< HEAD
 interest-cache = ["lru", "ahash"]
+||||||| 386969ba
+trace-logger = []
+=======
+>>>>>>> origin/master
 
 [dependencies]
+<<<<<<< HEAD
 tracing-core = { path = "../tracing-core", version = "0.1.28"}
 log = { version = "0.4.17" }
 once_cell = "1.13.0"
 lru = { version = "0.7.7", optional = true }
 ahash = { version = "0.7.7", optional = true }
+||||||| 386969ba
+tracing-core = { path = "../tracing-core", version = "0.1.17"}
+log = { version = "0.4" }
+lazy_static = "1.3.0"
+env_logger = { version = "0.7", optional = true }
+=======
+tracing-core = { path = "../tracing-core", version = "0.2"}
+log = "0.4.17"
+once_cell = "1.13.0"
+env_logger = { version = "0.8.4", optional = true }
+>>>>>>> origin/master
 
 [dev-dependencies]
+<<<<<<< HEAD
 tracing = { path = "../tracing", version = "0.1.35"}
 tracing-subscriber = { path = "../tracing-subscriber" }
 criterion = { version = "0.3.6", default-features = false }
+||||||| 386969ba
+tracing = { path = "../tracing", version = "0.1"}
+=======
+tracing = { path = "../tracing", version = "0.2"}
+>>>>>>> origin/master
 
 [badges]
 maintenance = { status = "actively-maintained" }
@@ -41,7 +64,14 @@ maintenance = { status = "actively-maintained" }
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+<<<<<<< HEAD
 
 [[bench]]
 name = "logging"
 harness = false
+||||||| 386969ba
+=======
+
+[lints]
+workspace = true
+>>>>>>> origin/master

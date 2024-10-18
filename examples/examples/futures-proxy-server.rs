@@ -1,3 +1,6 @@
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
+//!
 //! A proxy that forwards data to another server and forwards that server's
 //! responses back to clients.
 //!
@@ -7,7 +10,7 @@
 //!
 //! You can showcase this by running this in one terminal:
 //!
-//!     cargo run --example proxy_server -- --log_format=(plain|json)
+//!     cargo run --example futures-proxy-server -- --log_format=(plain|json)
 //!
 //! This in another terminal
 //!

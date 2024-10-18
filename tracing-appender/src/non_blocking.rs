@@ -19,7 +19,13 @@
 //! tracing_appender::non_blocking(std::io::stdout())
 //! # }
 //! ```
+<<<<<<< HEAD
 //! [builder]: NonBlockingBuilder::default
+||||||| 386969ba
+//! [builder]: ./struct.NonBlockingBuilder.html#method.default
+=======
+//! [builder]: NonBlockingBuilder::default()
+>>>>>>> origin/master
 //!
 //! <br/> This function returns a tuple of `NonBlocking` and `WorkerGuard`.
 //! `NonBlocking` implements [`MakeWriter`] which integrates with `tracing_subscriber`.
@@ -40,8 +46,8 @@
 //! ``` rust
 //! # fn docs() {
 //! let (non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
-//! let subscriber = tracing_subscriber::fmt().with_writer(non_blocking);
-//! tracing::subscriber::with_default(subscriber.finish(), || {
+//! let collector = tracing_subscriber::fmt().with_writer(non_blocking);
+//! tracing::collect::with_default(collector.finish(), || {
 //!    tracing::event!(tracing::Level::INFO, "Hello");
 //! });
 //! # }
@@ -91,8 +97,8 @@ pub const DEFAULT_BUFFERED_LINES_LIMIT: usize = 128_000;
 /// fn main () {
 /// # fn doc() {
 ///     let (non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
-///     let subscriber = tracing_subscriber::fmt().with_writer(non_blocking);
-///     tracing::subscriber::with_default(subscriber.finish(), || {
+///     let collector = tracing_subscriber::fmt().with_writer(non_blocking);
+///     tracing::collect::with_default(collector.finish(), || {
 ///         // Emit some tracing events within context of the non_blocking `_guard` and tracing subscriber
 ///         tracing::event!(tracing::Level::INFO, "Hello");
 ///     });
@@ -103,7 +109,13 @@ pub const DEFAULT_BUFFERED_LINES_LIMIT: usize = 128_000;
 #[must_use]
 #[derive(Debug)]
 pub struct WorkerGuard {
+<<<<<<< HEAD
     _guard: Option<JoinHandle<()>>,
+||||||| 386969ba
+    guard: Option<JoinHandle<()>>,
+=======
+    handle: Option<JoinHandle<()>>,
+>>>>>>> origin/master
     sender: Sender<Msg>,
     shutdown: Sender<()>,
 }
@@ -111,14 +123,14 @@ pub struct WorkerGuard {
 /// A non-blocking writer.
 ///
 /// While the line between "blocking" and "non-blocking" IO is fuzzy, writing to a file is typically
-/// considered to be a _blocking_ operation. For an application whose `Subscriber` writes spans and events
+/// considered to be a _blocking_ operation. For an application whose `Collector` writes spans and events
 /// as they are emitted, an application might find the latency profile to be unacceptable.
 /// `NonBlocking` moves the writing out of an application's data path by sending spans and events
 /// to a dedicated logging thread.
 ///
 /// This struct implements [`MakeWriter`][make_writer] from the `tracing-subscriber`
 /// crate. Therefore, it can be used with the [`tracing_subscriber::fmt`][fmt] module
-/// or with any other subscriber/layer implementation that uses the `MakeWriter` trait.
+/// or with any other collector/subscriber implementation that uses the `MakeWriter` trait.
 ///
 /// [make_writer]: tracing_subscriber::fmt::MakeWriter
 /// [fmt]: mod@tracing_subscriber::fmt
@@ -144,9 +156,19 @@ impl NonBlocking {
     /// The returned `NonBlocking` writer will have the [default configuration][default] values.
     /// Other configurations can be specified using the [builder] interface.
     ///
+<<<<<<< HEAD
     /// [default]: NonBlockingBuilder::default
     /// [builder]: NonBlockingBuilder
     pub fn new<T: Write + Send + 'static>(writer: T) -> (NonBlocking, WorkerGuard) {
+||||||| 386969ba
+    /// [default]: ./struct.NonBlockingBuilder.html#method.default
+    /// [builder]: ./struct.NonBlockingBuilder.html
+    pub fn new<T: Write + Send + Sync + 'static>(writer: T) -> (NonBlocking, WorkerGuard) {
+=======
+    /// [default]: NonBlockingBuilder::default()
+    /// [builder]: NonBlockingBuilder
+    pub fn new<T: Write + Send + 'static>(writer: T) -> (NonBlocking, WorkerGuard) {
+>>>>>>> origin/master
         NonBlockingBuilder::default().finish(writer)
     }
 
@@ -278,7 +300,13 @@ impl<'a> MakeWriter<'a> for NonBlocking {
 impl WorkerGuard {
     fn new(handle: JoinHandle<()>, sender: Sender<Msg>, shutdown: Sender<()>) -> Self {
         WorkerGuard {
+<<<<<<< HEAD
             _guard: Some(handle),
+||||||| 386969ba
+            guard: Some(handle),
+=======
+            handle: Some(handle),
+>>>>>>> origin/master
             sender,
             shutdown,
         }
@@ -287,6 +315,7 @@ impl WorkerGuard {
 
 impl Drop for WorkerGuard {
     fn drop(&mut self) {
+<<<<<<< HEAD
         match self
             .sender
             .send_timeout(Msg::Shutdown, Duration::from_millis(100))
@@ -302,6 +331,46 @@ impl Drop for WorkerGuard {
             Err(SendTimeoutError::Timeout(e)) => println!(
                 "Failed to send shutdown signal to logging worker. Error: {:?}",
                 e
+||||||| 386969ba
+        match self
+            .sender
+            .send_timeout(Msg::Shutdown, Duration::from_millis(100))
+        {
+            Ok(_) | Err(SendTimeoutError::Disconnected(_)) => (),
+            Err(SendTimeoutError::Timeout(e)) => println!(
+                "Failed to send shutdown signal to logging worker. Error: {:?}",
+                e
+=======
+        let timeout = Duration::from_millis(100);
+        match self.sender.send_timeout(Msg::Shutdown, timeout) {
+            Ok(_) => {
+                // Attempt to wait for `Worker` to flush all messages before dropping. This happens
+                // when the `Worker` calls `recv()` on a zero-capacity channel. Use `send_timeout`
+                // so that drop is not blocked indefinitely.
+                // TODO: Make timeout configurable.
+                let timeout = Duration::from_millis(1000);
+                match self.shutdown.send_timeout((), timeout) {
+                    Err(SendTimeoutError::Timeout(_)) => {
+                        eprintln!(
+                            "Shutting down logging worker timed out after {:?}.",
+                            timeout
+                        );
+                    }
+                    _ => {
+                        // At this point it is safe to wait for `Worker` destruction without blocking
+                        if let Some(handle) = self.handle.take() {
+                            if handle.join().is_err() {
+                                eprintln!("Logging worker thread panicked");
+                            }
+                        };
+                    }
+                }
+            }
+            Err(SendTimeoutError::Disconnected(_)) => (),
+            Err(SendTimeoutError::Timeout(_)) => eprintln!(
+                "Sending shutdown signal to logging worker timed out after {:?}",
+                timeout
+>>>>>>> origin/master
             ),
         }
     }
@@ -472,8 +541,8 @@ mod test {
         for _ in 0..10 {
             let cloned_non_blocking = non_blocking.clone();
             join_handles.push(thread::spawn(move || {
-                let subscriber = tracing_subscriber::fmt().with_writer(cloned_non_blocking);
-                tracing::subscriber::with_default(subscriber.finish(), || {
+                let collector = tracing_subscriber::fmt().with_writer(cloned_non_blocking);
+                tracing::collect::with_default(collector.finish(), || {
                     tracing::event!(tracing::Level::INFO, "Hello");
                 });
             }));

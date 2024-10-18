@@ -1,10 +1,19 @@
 use super::{Format, FormatEvent, FormatFields, FormatTime, Writer};
 use crate::{
     field::{RecordFields, VisitOutput},
+<<<<<<< HEAD
     fmt::{
         fmt_layer::{FmtContext, FormattedFields},
         writer::WriteAdaptor,
     },
+||||||| 386969ba
+    fmt::fmt_layer::{FmtContext, FormattedFields},
+=======
+    fmt::{
+        fmt_subscriber::{FmtContext, FormattedFields},
+        writer::WriteAdaptor,
+    },
+>>>>>>> origin/master
     registry::LookupSpan,
 };
 use serde::ser::{SerializeMap, Serializer as _};
@@ -16,7 +25,7 @@ use std::{
 use tracing_core::{
     field::{self, Field},
     span::Record,
-    Event, Subscriber,
+    Collect, Event,
 };
 use tracing_serde::AsSerde;
 
@@ -60,15 +69,16 @@ use tracing_log::NormalizeEvent;
 /// output JSON objects:
 ///
 /// - [`Json::flatten_event`] can be used to enable flattening event fields into
-/// the root
+///   the root
 /// - [`Json::with_current_span`] can be used to control logging of the current
-/// span
+///   span
 /// - [`Json::with_span_list`] can be used to control logging of the span list
-/// object.
+///   object.
 ///
 /// By default, event fields are not flattened, and both current span and span
 /// list are logged.
 ///
+<<<<<<< HEAD
 /// # Valuable Support
 ///
 /// Experimental support is available for using the [`valuable`] crate to record
@@ -86,6 +96,12 @@ use tracing_log::NormalizeEvent;
 /// [`valuable`]: https://crates.io/crates/valuable
 /// [unstable]: crate#unstable-features
 /// [`valuable::Valuable`]: https://docs.rs/valuable/latest/valuable/trait.Valuable.html
+||||||| 386969ba
+/// [`Json::flatten_event`]: #method.flatten_event
+/// [`Json::with_current_span`]: #method.with_current_span
+/// [`Json::with_span_list`]: #method.with_span_list
+=======
+>>>>>>> origin/master
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Json {
     pub(crate) flatten_event: bool,
@@ -112,16 +128,16 @@ impl Json {
 }
 
 struct SerializableContext<'a, 'b, Span, N>(
-    &'b crate::layer::Context<'a, Span>,
+    &'b crate::subscribe::Context<'a, Span>,
     std::marker::PhantomData<N>,
 )
 where
-    Span: Subscriber + for<'lookup> crate::registry::LookupSpan<'lookup>,
+    Span: Collect + for<'lookup> crate::registry::LookupSpan<'lookup>,
     N: for<'writer> FormatFields<'writer> + 'static;
 
 impl<'a, 'b, Span, N> serde::ser::Serialize for SerializableContext<'a, 'b, Span, N>
 where
-    Span: Subscriber + for<'lookup> crate::registry::LookupSpan<'lookup>,
+    Span: Collect + for<'lookup> crate::registry::LookupSpan<'lookup>,
     N: for<'writer> FormatFields<'writer> + 'static,
 {
     fn serialize<Ser>(&self, serializer_o: Ser) -> Result<Ser::Ok, Ser::Error>
@@ -210,20 +226,28 @@ where
     }
 }
 
-impl<S, N, T> FormatEvent<S, N> for Format<Json, T>
+impl<C, N, T> FormatEvent<C, N> for Format<Json, T>
 where
-    S: Subscriber + for<'lookup> LookupSpan<'lookup>,
+    C: Collect + for<'lookup> LookupSpan<'lookup>,
     N: for<'writer> FormatFields<'writer> + 'static,
     T: FormatTime,
 {
     fn format_event(
         &self,
+<<<<<<< HEAD
         ctx: &FmtContext<'_, S, N>,
         mut writer: Writer<'_>,
+||||||| 386969ba
+        ctx: &FmtContext<'_, S, N>,
+        writer: &mut dyn fmt::Write,
+=======
+        ctx: &FmtContext<'_, C, N>,
+        mut writer: Writer<'_>,
+>>>>>>> origin/master
         event: &Event<'_>,
     ) -> fmt::Result
     where
-        S: Subscriber + for<'a> LookupSpan<'a>,
+        C: Collect + for<'a> LookupSpan<'a>,
     {
         let mut timestamp = String::new();
         self.timer.format_time(&mut Writer::new(&mut timestamp))?;
@@ -475,6 +499,7 @@ impl<'a> crate::field::VisitOutput<fmt::Result> for JsonVisitor<'a> {
 }
 
 impl<'a> field::Visit for JsonVisitor<'a> {
+<<<<<<< HEAD
     #[cfg(all(tracing_unstable, feature = "valuable"))]
     fn record_value(&mut self, field: &Field, value: valuable_crate::Value<'_>) {
         let value = match serde_json::to_value(valuable_serde::Serializable::new(value)) {
@@ -501,6 +526,15 @@ impl<'a> field::Visit for JsonVisitor<'a> {
             .insert(field.name(), serde_json::Value::from(value));
     }
 
+||||||| 386969ba
+=======
+    /// Visit a double precision floating point value.
+    fn record_f64(&mut self, field: &Field, value: f64) {
+        self.values
+            .insert(field.name(), serde_json::Value::from(value));
+    }
+
+>>>>>>> origin/master
     /// Visit a signed 64-bit integer value.
     fn record_i64(&mut self, field: &Field, value: i64) {
         self.values
@@ -522,7 +556,18 @@ impl<'a> field::Visit for JsonVisitor<'a> {
     /// Visit a string value.
     fn record_str(&mut self, field: &Field, value: &str) {
         self.values
+<<<<<<< HEAD
             .insert(field.name(), serde_json::Value::from(value));
+||||||| 386969ba
+            .insert(&field.name(), serde_json::Value::from(value));
+=======
+            .insert(field.name(), serde_json::Value::from(value));
+    }
+
+    fn record_bytes(&mut self, field: &Field, value: &[u8]) {
+        self.values
+            .insert(field.name(), serde_json::Value::from(value));
+>>>>>>> origin/master
     }
 
     fn record_debug(&mut self, field: &Field, value: &dyn fmt::Debug) {
@@ -543,12 +588,30 @@ impl<'a> field::Visit for JsonVisitor<'a> {
 }
 #[cfg(test)]
 mod test {
+<<<<<<< HEAD
     use super::*;
     use crate::fmt::{format::FmtSpan, test::MockMakeWriter, time::FormatTime, SubscriberBuilder};
     use tracing::{self, subscriber::with_default};
+||||||| 386969ba
+    use crate::fmt::{test::MockWriter, time::FormatTime};
+    use lazy_static::lazy_static;
+    use tracing::{self, subscriber::with_default};
+=======
+    use super::*;
+    use crate::fmt::{format::FmtSpan, test::MockMakeWriter, time::FormatTime, CollectorBuilder};
+>>>>>>> origin/master
+
+<<<<<<< HEAD
+    use std::fmt;
+    use std::path::Path;
+||||||| 386969ba
+    use std::{fmt, sync::Mutex};
+=======
+    use tracing::{self, collect::with_default};
 
     use std::fmt;
     use std::path::Path;
+>>>>>>> origin/master
 
     struct MockTime;
     impl FormatTime for MockTime {
@@ -557,13 +620,22 @@ mod test {
         }
     }
 
+<<<<<<< HEAD
     fn subscriber() -> SubscriberBuilder<JsonFields, Format<Json>> {
         SubscriberBuilder::default().json()
     }
 
+||||||| 386969ba
+=======
+    fn collector() -> CollectorBuilder<JsonFields, Format<Json>> {
+        crate::fmt::CollectorBuilder::default().json()
+    }
+
+>>>>>>> origin/master
     #[test]
     fn json() {
         let expected =
+<<<<<<< HEAD
         "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
         let subscriber = subscriber()
             .flatten_event(false)
@@ -575,7 +647,29 @@ mod test {
             tracing::info!("some json test");
         });
     }
+||||||| 386969ba
+        "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+=======
+        "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3,\"slice\":[97,98,99]},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3,\"slice\":[97,98,99]}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+        let collector = collector()
+            .flatten_event(false)
+            .with_current_span(true)
+            .with_span_list(true);
+        test_json(expected, collector, || {
+            let span = tracing::span!(
+                tracing::Level::INFO,
+                "json_span",
+                answer = 42,
+                number = 3,
+                slice = &b"abc"[..]
+            );
+            let _guard = span.enter();
+            tracing::info!("some json test");
+        });
+    }
+>>>>>>> origin/master
 
+<<<<<<< HEAD
     #[test]
     fn json_filename() {
         let current_path = Path::new("tracing-subscriber")
@@ -614,6 +708,48 @@ mod test {
             .with_line_number(true)
             .with_span_list(true);
         test_json_with_line_number(expected, subscriber, || {
+||||||| 386969ba
+        test_json(make_writer, expected, &BUF, false, true, true, || {
+=======
+    #[test]
+    fn json_filename() {
+        let current_path = Path::new("tracing-subscriber")
+            .join("src")
+            .join("fmt")
+            .join("format")
+            .join("json.rs")
+            .to_str()
+            .expect("path must be valid unicode")
+            // escape windows backslashes
+            .replace('\\', "\\\\");
+        let expected =
+            &format!("{}{}{}",
+                    "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"filename\":\"",
+                    current_path,
+                    "\",\"fields\":{\"message\":\"some json test\"}}\n");
+        let collector = collector()
+            .flatten_event(false)
+            .with_current_span(true)
+            .with_file(true)
+            .with_span_list(true);
+        test_json(expected, collector, || {
+            let span = tracing::span!(tracing::Level::INFO, "json_span", answer = 42, number = 3);
+            let _guard = span.enter();
+            tracing::info!("some json test");
+        });
+    }
+
+    #[test]
+    fn json_line_number() {
+        let expected =
+            "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"line_number\":42,\"fields\":{\"message\":\"some json test\"}}\n";
+        let collector = collector()
+            .flatten_event(false)
+            .with_current_span(true)
+            .with_line_number(true)
+            .with_span_list(true);
+        test_json_with_line_number(expected, collector, || {
+>>>>>>> origin/master
             let span = tracing::span!(tracing::Level::INFO, "json_span", answer = 42, number = 3);
             let _guard = span.enter();
             tracing::info!("some json test");
@@ -625,11 +761,21 @@ mod test {
         let expected =
         "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"message\":\"some json test\"}\n";
 
+<<<<<<< HEAD
         let subscriber = subscriber()
             .flatten_event(true)
             .with_current_span(true)
             .with_span_list(true);
         test_json(expected, subscriber, || {
+||||||| 386969ba
+        test_json(make_writer, expected, &BUF, true, true, true, || {
+=======
+        let collector = collector()
+            .flatten_event(true)
+            .with_current_span(true)
+            .with_span_list(true);
+        test_json(expected, collector, || {
+>>>>>>> origin/master
             let span = tracing::span!(tracing::Level::INFO, "json_span", answer = 42, number = 3);
             let _guard = span.enter();
             tracing::info!("some json test");
@@ -640,11 +786,22 @@ mod test {
     fn json_disabled_current_span_event() {
         let expected =
         "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+<<<<<<< HEAD
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(false)
             .with_span_list(true);
         test_json(expected, subscriber, || {
+||||||| 386969ba
+
+        test_json(make_writer, expected, &BUF, false, false, true, || {
+=======
+        let collector = collector()
+            .flatten_event(false)
+            .with_current_span(false)
+            .with_span_list(true);
+        test_json(expected, collector, || {
+>>>>>>> origin/master
             let span = tracing::span!(tracing::Level::INFO, "json_span", answer = 42, number = 3);
             let _guard = span.enter();
             tracing::info!("some json test");
@@ -655,11 +812,22 @@ mod test {
     fn json_disabled_span_list_event() {
         let expected =
         "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+<<<<<<< HEAD
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(true)
             .with_span_list(false);
         test_json(expected, subscriber, || {
+||||||| 386969ba
+
+        test_json(make_writer, expected, &BUF, false, true, false, || {
+=======
+        let collector = collector()
+            .flatten_event(false)
+            .with_current_span(true)
+            .with_span_list(false);
+        test_json(expected, collector, || {
+>>>>>>> origin/master
             let span = tracing::span!(tracing::Level::INFO, "json_span", answer = 42, number = 3);
             let _guard = span.enter();
             tracing::info!("some json test");
@@ -670,11 +838,22 @@ mod test {
     fn json_nested_span() {
         let expected =
         "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":43,\"name\":\"nested_json_span\",\"number\":4},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3},{\"answer\":43,\"name\":\"nested_json_span\",\"number\":4}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+<<<<<<< HEAD
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(true)
             .with_span_list(true);
         test_json(expected, subscriber, || {
+||||||| 386969ba
+
+        test_json(make_writer, expected, &BUF, false, true, true, || {
+=======
+        let collector = collector()
+            .flatten_event(false)
+            .with_current_span(true)
+            .with_span_list(true);
+        test_json(expected, collector, || {
+>>>>>>> origin/master
             let span = tracing::span!(tracing::Level::INFO, "json_span", answer = 42, number = 3);
             let _guard = span.enter();
             let span = tracing::span!(
@@ -692,11 +871,22 @@ mod test {
     fn json_no_span() {
         let expected =
         "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+<<<<<<< HEAD
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(true)
             .with_span_list(true);
         test_json(expected, subscriber, || {
+||||||| 386969ba
+
+        test_json(make_writer, expected, &BUF, false, true, true, || {
+=======
+        let collector = collector()
+            .flatten_event(false)
+            .with_current_span(true)
+            .with_span_list(true);
+        test_json(expected, collector, || {
+>>>>>>> origin/master
             tracing::info!("some json test");
         });
     }
@@ -706,16 +896,45 @@ mod test {
         // This test reproduces issue #707, where using `Span::record` causes
         // any events inside the span to be ignored.
 
+<<<<<<< HEAD
         let make_writer = MockMakeWriter::default();
         let subscriber = crate::fmt()
             .json()
             .with_writer(make_writer.clone())
             .finish();
+||||||| 386969ba
+        let make_writer = || MockWriter::new(&BUF);
+        let subscriber = crate::fmt().json().with_writer(make_writer).finish();
+
+        let parse_buf = || -> serde_json::Value {
+            let buf = String::from_utf8(BUF.try_lock().unwrap().to_vec()).unwrap();
+            let json = buf
+                .lines()
+                .last()
+                .expect("expected at least one line to be written!");
+            match serde_json::from_str(&json) {
+                Ok(v) => v,
+                Err(e) => panic!(
+                    "assertion failed: JSON shouldn't be malformed\n  error: {}\n  json: {}",
+                    e, json
+                ),
+            }
+        };
+=======
+        let buffer = MockMakeWriter::default();
+        let subscriber = crate::fmt().json().with_writer(buffer.clone()).finish();
+>>>>>>> origin/master
 
         with_default(subscriber, || {
             tracing::info!("an event outside the root span");
             assert_eq!(
+<<<<<<< HEAD
                 parse_as_json(&make_writer)["fields"]["message"],
+||||||| 386969ba
+                parse_buf()["fields"]["message"],
+=======
+                parse_as_json(&buffer)["fields"]["message"],
+>>>>>>> origin/master
                 "an event outside the root span"
             );
 
@@ -725,12 +944,19 @@ mod test {
 
             tracing::info!("an event inside the root span");
             assert_eq!(
+<<<<<<< HEAD
                 parse_as_json(&make_writer)["fields"]["message"],
+||||||| 386969ba
+                parse_buf()["fields"]["message"],
+=======
+                parse_as_json(&buffer)["fields"]["message"],
+>>>>>>> origin/master
                 "an event inside the root span"
             );
         });
     }
 
+<<<<<<< HEAD
     #[test]
     fn json_span_event_show_correct_context() {
         let buffer = MockMakeWriter::default();
@@ -832,17 +1058,149 @@ mod test {
     }
 
     fn test_json<T>(
+||||||| 386969ba
+    #[cfg(feature = "json")]
+    fn test_json<T, U>(
+        make_writer: T,
+=======
+    #[test]
+    fn json_span_event_show_correct_context() {
+        let buffer = MockMakeWriter::default();
+        let subscriber = collector()
+            .with_writer(buffer.clone())
+            .flatten_event(false)
+            .with_current_span(true)
+            .with_span_list(false)
+            .with_span_events(FmtSpan::FULL)
+            .finish();
+
+        with_default(subscriber, || {
+            let context = "parent";
+            let parent_span = tracing::info_span!("parent_span", context);
+
+            let event = parse_as_json(&buffer);
+            assert_eq!(event["fields"]["message"], "new");
+            assert_eq!(event["span"]["context"], "parent");
+
+            let _parent_enter = parent_span.enter();
+            let event = parse_as_json(&buffer);
+            assert_eq!(event["fields"]["message"], "enter");
+            assert_eq!(event["span"]["context"], "parent");
+
+            let context = "child";
+            let child_span = tracing::info_span!("child_span", context);
+            let event = parse_as_json(&buffer);
+            assert_eq!(event["fields"]["message"], "new");
+            assert_eq!(event["span"]["context"], "child");
+
+            let _child_enter = child_span.enter();
+            let event = parse_as_json(&buffer);
+            assert_eq!(event["fields"]["message"], "enter");
+            assert_eq!(event["span"]["context"], "child");
+
+            drop(_child_enter);
+            let event = parse_as_json(&buffer);
+            assert_eq!(event["fields"]["message"], "exit");
+            assert_eq!(event["span"]["context"], "child");
+
+            drop(child_span);
+            let event = parse_as_json(&buffer);
+            assert_eq!(event["fields"]["message"], "close");
+            assert_eq!(event["span"]["context"], "child");
+
+            drop(_parent_enter);
+            let event = parse_as_json(&buffer);
+            assert_eq!(event["fields"]["message"], "exit");
+            assert_eq!(event["span"]["context"], "parent");
+
+            drop(parent_span);
+            let event = parse_as_json(&buffer);
+            assert_eq!(event["fields"]["message"], "close");
+            assert_eq!(event["span"]["context"], "parent");
+        });
+    }
+
+    #[test]
+    fn json_span_event_with_no_fields() {
+        // Check span events serialize correctly.
+        // Discussion: https://github.com/tokio-rs/tracing/issues/829#issuecomment-661984255
+        //
+        let buffer = MockMakeWriter::default();
+        let subscriber = collector()
+            .with_writer(buffer.clone())
+            .flatten_event(false)
+            .with_current_span(false)
+            .with_span_list(false)
+            .with_span_events(FmtSpan::FULL)
+            .finish();
+
+        with_default(subscriber, || {
+            let span = tracing::info_span!("valid_json");
+            assert_eq!(parse_as_json(&buffer)["fields"]["message"], "new");
+
+            let _enter = span.enter();
+            assert_eq!(parse_as_json(&buffer)["fields"]["message"], "enter");
+
+            drop(_enter);
+            assert_eq!(parse_as_json(&buffer)["fields"]["message"], "exit");
+
+            drop(span);
+            assert_eq!(parse_as_json(&buffer)["fields"]["message"], "close");
+        });
+    }
+
+    fn parse_as_json(buffer: &MockMakeWriter) -> serde_json::Value {
+        let buf = String::from_utf8(buffer.buf().to_vec()).unwrap();
+        let json = buf
+            .lines()
+            .last()
+            .expect("expected at least one line to be written!");
+        match serde_json::from_str(json) {
+            Ok(v) => v,
+            Err(e) => panic!(
+                "assertion failed: JSON shouldn't be malformed\n  error: {}\n  json: {}",
+                e, json
+            ),
+        }
+    }
+
+    fn test_json<T>(
+>>>>>>> origin/master
         expected: &str,
+<<<<<<< HEAD
         builder: crate::fmt::SubscriberBuilder<JsonFields, Format<Json>>,
         producer: impl FnOnce() -> T,
     ) {
         let make_writer = MockMakeWriter::default();
         let subscriber = builder
             .with_writer(make_writer.clone())
+||||||| 386969ba
+        buf: &Mutex<Vec<u8>>,
+        flatten_event: bool,
+        display_current_span: bool,
+        display_span_list: bool,
+        producer: impl FnOnce() -> U,
+    ) where
+        T: crate::fmt::MakeWriter + Send + Sync + 'static,
+    {
+        let subscriber = crate::fmt::Subscriber::builder()
+            .json()
+            .flatten_event(flatten_event)
+            .with_current_span(display_current_span)
+            .with_span_list(display_span_list)
+            .with_writer(make_writer)
+=======
+        builder: crate::fmt::CollectorBuilder<JsonFields, Format<Json>>,
+        producer: impl FnOnce() -> T,
+    ) {
+        let make_writer = MockMakeWriter::default();
+        let collector = builder
+            .with_writer(make_writer.clone())
+>>>>>>> origin/master
             .with_timer(MockTime)
             .finish();
 
-        with_default(subscriber, producer);
+        with_default(collector, producer);
 
         let buf = make_writer.buf();
         let actual = std::str::from_utf8(&buf[..]).unwrap();
@@ -852,6 +1210,7 @@ mod test {
             serde_json::from_str(actual).unwrap()
         );
     }
+<<<<<<< HEAD
 
     fn test_json_with_line_number<T>(
         expected: &str,
@@ -882,4 +1241,37 @@ mod test {
         }
         assert_eq!(actual, expected);
     }
+||||||| 386969ba
+=======
+
+    fn test_json_with_line_number<T>(
+        expected: &str,
+        builder: crate::fmt::CollectorBuilder<JsonFields, Format<Json>>,
+        producer: impl FnOnce() -> T,
+    ) {
+        let make_writer = MockMakeWriter::default();
+        let collector = builder
+            .with_writer(make_writer.clone())
+            .with_timer(MockTime)
+            .finish();
+
+        with_default(collector, producer);
+
+        let buf = make_writer.buf();
+        let actual = std::str::from_utf8(&buf[..]).unwrap();
+        let mut expected =
+            serde_json::from_str::<std::collections::HashMap<&str, serde_json::Value>>(expected)
+                .unwrap();
+        let expect_line_number = expected.remove("line_number").is_some();
+        let mut actual: std::collections::HashMap<&str, serde_json::Value> =
+            serde_json::from_str(actual).unwrap();
+        let line_number = actual.remove("line_number");
+        if expect_line_number {
+            assert_eq!(line_number.map(|x| x.is_number()), Some(true));
+        } else {
+            assert!(line_number.is_none());
+        }
+        assert_eq!(actual, expected);
+    }
+>>>>>>> origin/master
 }

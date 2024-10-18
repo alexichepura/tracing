@@ -1,6 +1,22 @@
+<<<<<<< HEAD
 use tracing::subscriber::with_default;
+||||||| 386969ba
+mod support;
+use support::*;
+
+use crate::support::field::mock;
+use crate::support::span::NewSpan;
+use tracing::subscriber::with_default;
+=======
+use tracing::collect::with_default;
+>>>>>>> origin/master
 use tracing_attributes::instrument;
+<<<<<<< HEAD
 use tracing_mock::{expect, span::NewSpan, subscriber};
+||||||| 386969ba
+=======
+use tracing_mock::{collector, expect, span::NewSpan};
+>>>>>>> origin/master
 
 #[instrument(fields(foo = "bar", dsa = true, num = 1))]
 fn fn_no_param() {}
@@ -29,11 +45,23 @@ fn fn_clashy_expr_field2(s: &str) {
     let _ = s;
 }
 
+<<<<<<< HEAD
 #[instrument(fields(s = &s))]
 fn fn_string(s: String) {
     let _ = s;
 }
 
+||||||| 386969ba
+=======
+#[instrument(fields(s = &s))]
+fn fn_string(s: String) {
+    let _ = s;
+}
+
+#[instrument(fields(keywords.impl.type.fn = _arg), skip(_arg))]
+fn fn_keyword_ident_in_field(_arg: &str) {}
+
+>>>>>>> origin/master
 #[derive(Debug)]
 struct HasField {
     my_field: &'static str,
@@ -46,8 +74,16 @@ impl HasField {
 
 #[test]
 fn fields() {
+<<<<<<< HEAD
     let span = expect::span().with_field(
         expect::field("foo")
+||||||| 386969ba
+    let span = span::mock().with_field(
+        mock("foo")
+=======
+    let span = expect::span().with_fields(
+        expect::field("foo")
+>>>>>>> origin/master
             .with_value(&"bar")
             .and(expect::field("dsa").with_value(&true))
             .and(expect::field("num").with_value(&1))
@@ -60,10 +96,22 @@ fn fields() {
 
 #[test]
 fn expr_field() {
+<<<<<<< HEAD
     let span = expect::span().with_field(
         expect::field("s")
             .with_value(&"hello world")
             .and(expect::field("len").with_value(&"hello world".len()))
+||||||| 386969ba
+    let span = span::mock().with_field(
+        mock("s")
+            .with_value(&tracing::field::debug("hello world"))
+            .and(mock("len").with_value(&"hello world".len()))
+=======
+    let span = expect::span().with_fields(
+        expect::field("s")
+            .with_value(&"hello world")
+            .and(expect::field("len").with_value(&"hello world".len()))
+>>>>>>> origin/master
             .only(),
     );
     run_test(span, || {
@@ -73,11 +121,25 @@ fn expr_field() {
 
 #[test]
 fn two_expr_fields() {
+<<<<<<< HEAD
     let span = expect::span().with_field(
         expect::field("s")
             .with_value(&"hello world")
             .and(expect::field("s.len").with_value(&"hello world".len()))
             .and(expect::field("s.is_empty").with_value(&false))
+||||||| 386969ba
+    let span = span::mock().with_field(
+        mock("s")
+            .with_value(&tracing::field::debug("hello world"))
+            .and(mock("s.len").with_value(&"hello world".len()))
+            .and(mock("s.is_empty").with_value(&false))
+=======
+    let span = expect::span().with_fields(
+        expect::field("s")
+            .with_value(&"hello world")
+            .and(expect::field("s.len").with_value(&"hello world".len()))
+            .and(expect::field("s.is_empty").with_value(&false))
+>>>>>>> origin/master
             .only(),
     );
     run_test(span, || {
@@ -87,7 +149,13 @@ fn two_expr_fields() {
 
 #[test]
 fn clashy_expr_field() {
+<<<<<<< HEAD
     let span = expect::span().with_field(
+||||||| 386969ba
+    let span = span::mock().with_field(
+=======
+    let span = expect::span().with_fields(
+>>>>>>> origin/master
         // Overriding the `s` field should record `s` as a `Display` value,
         // rather than as a `Debug` value.
         expect::field("s")
@@ -99,7 +167,13 @@ fn clashy_expr_field() {
         fn_clashy_expr_field("hello world");
     });
 
+<<<<<<< HEAD
     let span = expect::span().with_field(expect::field("s").with_value(&"s").only());
+||||||| 386969ba
+    let span = span::mock().with_field(mock("s").with_value(&"s").only());
+=======
+    let span = expect::span().with_fields(expect::field("s").with_value(&"s").only());
+>>>>>>> origin/master
     run_test(span, || {
         fn_clashy_expr_field2("hello world");
     });
@@ -107,8 +181,15 @@ fn clashy_expr_field() {
 
 #[test]
 fn self_expr_field() {
+<<<<<<< HEAD
     let span =
         expect::span().with_field(expect::field("my_field").with_value(&"hello world").only());
+||||||| 386969ba
+    let span = span::mock().with_field(mock("my_field").with_value(&"hello world").only());
+=======
+    let span =
+        expect::span().with_fields(expect::field("my_field").with_value(&"hello world").only());
+>>>>>>> origin/master
     run_test(span, || {
         let has_field = HasField {
             my_field: "hello world",
@@ -119,8 +200,16 @@ fn self_expr_field() {
 
 #[test]
 fn parameters_with_fields() {
+<<<<<<< HEAD
     let span = expect::span().with_field(
         expect::field("foo")
+||||||| 386969ba
+    let span = span::mock().with_field(
+        mock("foo")
+=======
+    let span = expect::span().with_fields(
+        expect::field("foo")
+>>>>>>> origin/master
             .with_value(&"bar")
             .and(expect::field("param").with_value(&1u32))
             .only(),
@@ -132,12 +221,19 @@ fn parameters_with_fields() {
 
 #[test]
 fn empty_field() {
+<<<<<<< HEAD
     let span = expect::span().with_field(expect::field("foo").with_value(&"bar").only());
+||||||| 386969ba
+    let span = span::mock().with_field(mock("foo").with_value(&"bar").only());
+=======
+    let span = expect::span().with_fields(expect::field("foo").with_value(&"bar").only());
+>>>>>>> origin/master
     run_test(span, || {
         fn_empty_field();
     });
 }
 
+<<<<<<< HEAD
 #[test]
 fn string_field() {
     let span = expect::span().with_field(expect::field("s").with_value(&"hello world").only());
@@ -146,14 +242,35 @@ fn string_field() {
     });
 }
 
+||||||| 386969ba
+=======
+#[test]
+fn string_field() {
+    let span = expect::span().with_fields(expect::field("s").with_value(&"hello world").only());
+    run_test(span, || {
+        fn_string(String::from("hello world"));
+    });
+}
+
+#[test]
+fn keyword_ident_in_field_name() {
+    let span = expect::span().with_fields(
+        expect::field("keywords.impl.type.fn")
+            .with_value(&"test")
+            .only(),
+    );
+    run_test(span, || fn_keyword_ident_in_field("test"));
+}
+
+>>>>>>> origin/master
 fn run_test<F: FnOnce() -> T, T>(span: NewSpan, fun: F) {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .new_span(span)
         .enter(expect::span())
         .exit(expect::span())
         .only()
         .run_with_handle();
 
-    with_default(subscriber, fun);
+    with_default(collector, fun);
     handle.assert_finished();
 }

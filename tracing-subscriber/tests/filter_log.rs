@@ -35,13 +35,28 @@ fn log_is_enabled() {
     let filter: EnvFilter = "filter_log::my_module=info"
         .parse()
         .expect("filter should parse");
+<<<<<<< HEAD
     let (subscriber, finished) = subscriber::mock()
         .event(expect::event().at_level(Level::INFO))
         .event(expect::event().at_level(Level::WARN))
         .event(expect::event().at_level(Level::ERROR))
         .only()
+||||||| 386969ba
+    let (subscriber, finished) = subscriber::mock()
+        .event(event::mock().at_level(Level::INFO))
+        .event(event::mock().at_level(Level::WARN))
+        .event(event::mock().at_level(Level::ERROR))
+        .done()
+=======
+    let (collector, finished) = collector::mock()
+        .event(expect::event().at_level(Level::INFO))
+        .event(expect::event().at_level(Level::WARN))
+        .event(expect::event().at_level(Level::ERROR))
+        .only()
+>>>>>>> origin/master
         .run_with_handle();
 
+<<<<<<< HEAD
     // Note: we have to set the global default in order to set the `log` max
     // level, which can only be set once.
     subscriber.with(filter).init();
@@ -58,6 +73,28 @@ fn log_is_enabled() {
         !log::log_enabled!(log::Level::Warn),
         "warn should not be enabled outside `my_module`"
     );
+||||||| 386969ba
+    with_default(subscriber, || {
+        my_module::do_test();
+    });
+=======
+    // Note: we have to set the global default in order to set the `log` max
+    // level, which can only be set once.
+    collector.with(filter).init();
+
+    my_module::test_records();
+    log::info!("this is disabled");
+
+    my_module::test_log_enabled();
+    assert!(
+        !log::log_enabled!(log::Level::Info),
+        "info should not be enabled outside `my_module`"
+    );
+    assert!(
+        !log::log_enabled!(log::Level::Warn),
+        "warn should not be enabled outside `my_module`"
+    );
+>>>>>>> origin/master
 
     finished.assert_finished();
 }

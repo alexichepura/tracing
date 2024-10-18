@@ -5,6 +5,7 @@
     """
   publish = "target/doc"
 
+<<<<<<< HEAD
 [build.environment]
   RUSTDOCFLAGS="""
     -D warnings \
@@ -15,6 +16,20 @@
     """
   RUSTFLAGS="--cfg tracing_unstable"
 
+||||||| 386969ba
+=======
+[build.environment]
+  RUSTDOCFLAGS="""
+    -D warnings \
+    --force-warn rustdoc::redundant-explicit-links \
+    --force-warn renamed-and-removed-lints \
+    --cfg docsrs \
+    --html-before-content /opt/build/repo/assets/warning.html \
+    --html-in-header /opt/build/repo/assets/noindex.html \
+    --html-in-header /opt/build/repo/assets/warning-css.html \
+    """
+
+>>>>>>> origin/master
 [[redirects]]
   from = "/"
   to = "/tracing"

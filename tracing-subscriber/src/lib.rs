@@ -1,19 +1,20 @@
 //! Utilities for implementing and composing [`tracing`] subscribers.
 //!
 //! [`tracing`] is a framework for instrumenting Rust programs to collect
-//! scoped, structured, and async-aware diagnostics. The [`Subscriber`] trait
+//! scoped, structured, and async-aware diagnostics. The [`Collect`] trait
 //! represents the functionality necessary to collect this trace data. This
 //! crate contains tools for composing subscribers out of smaller units of
 //! behaviour, and batteries-included implementations of common subscriber
 //! functionality.
 //!
-//! `tracing-subscriber` is intended for use by both `Subscriber` authors and
+//! `tracing-subscriber` is intended for use by both `Collector` authors and
 //! application authors using `tracing` to instrument their applications.
 //!
 //! *Compiler support: [requires `rustc` 1.63+][msrv]*
 //!
 //! [msrv]: #supported-rust-versions
 //!
+<<<<<<< HEAD
 //! ## `Layer`s and `Filter`s
 //!
 //! The most important component of the `tracing-subscriber` API is the
@@ -39,8 +40,38 @@
 //! [plf]: crate::layer#per-layer-filtering
 //!
 //! ## Included Subscribers
+||||||| 386969ba
+//! ## Included Subscribers
+=======
+//! ## Subscribers and Filters
+>>>>>>> origin/master
 //!
-//! The following `Subscriber`s are provided for application authors:
+//! The most important component of the `tracing-subscriber` API is the
+//! [`Subscribe`] trait, which provides a composable abstraction for building
+//! [collector]s. Like the [`Collect`] trait, [`Subscribe`] defines a
+//! particular behavior for collecting trace data. Unlike [`Collect`],
+//! which implements a *complete* strategy for how trace data is collected,
+//! [`Subscribe`] provide *modular* implementations of specific behaviors.
+//! Therefore, they can be [composed together] to form a [collector] which is
+//! capable of recording traces in a variety of ways. See the [`subscribe` module's
+//! documentation][subscribe] for details on using [subscribers].
+//!
+//! In addition, the [`Filter`] trait defines an interface for filtering what
+//! spans and events are recorded by a particular subscriber. This allows different
+//! [`Subscribe`] implementationss to handle separate subsets of the trace data
+//! emitted by a program. See the [documentation on per-subscriber
+//! filtering][psf] for more information on using [`Filter`]s.
+//!
+//! [`Subscribe`]: crate::subscribe::Subscribe
+//! [composed together]: crate::subscribe#composing-subscribers
+//! [subscribe]: crate::subscribe
+//! [subscribers]: crate::subscribe
+//! [`Filter`]: crate::subscribe::Filter
+//! [psf]: crate::subscribe#per-subscriber-filtering
+//!
+//! ## Included Collectors
+//!
+//! The following [collector]s are provided for application authors:
 //!
 //! - [`fmt`] - Formats and logs tracing data (requires the `fmt` feature flag)
 //!
@@ -57,6 +88,7 @@
 //! - `ansi`: Enables `fmt` support for ANSI terminal colors. Enabled by
 //!   default.
 //! - `registry`: enables the [`registry`] module. Enabled by default.
+<<<<<<< HEAD
 //!   **Requires "std"**.
 //! - `json`: Enables `fmt` support for JSON output. In JSON output, the ANSI
 //!   feature does nothing. **Requires "fmt" and "std"**.
@@ -64,6 +96,15 @@
 //!   crate]'s timestamp formatters with the `fmt` subscriber.
 //!
 //! [`registry`]: mod@registry
+||||||| 386969ba
+//! - `json`: Enables `fmt` support for JSON output. In JSON output, the ANSI feature does nothing.
+=======
+//!   **Requires "std"**.
+//! - `json`: Enables `fmt` support for JSON output. In JSON output, the ANSI
+//!   feature does nothing. **Requires "fmt" and "std"**.
+//! - `local-time`: Enables local time formatting when using the [`time`
+//!   crate]'s timestamp formatters with the `fmt` subscriber.
+>>>>>>> origin/master
 //!
 //! ### Optional Dependencies
 //!
@@ -76,6 +117,7 @@
 //! - [`parking_lot`]: Use the `parking_lot` crate's `RwLock` implementation
 //!   rather than the Rust standard library's implementation.
 //!
+<<<<<<< HEAD
 //! ### `no_std` Support
 //!
 //! In embedded systems and other bare-metal applications, `tracing` can be
@@ -135,6 +177,37 @@
 //! [`valuable`]: https://crates.io/crates/valuable
 //! [`format::Json`]: crate::fmt::format::Json
 //!
+||||||| 386969ba
+=======
+//! ### `no_std` Support
+//!
+//! In embedded systems and other bare-metal applications, `tracing` can be
+//! used without requiring the Rust standard library, although some features are
+//! disabled. Although most of the APIs provided by `tracing-subscriber`, such
+//! as [`fmt`] and [`EnvFilter`], require the standard library, some
+//! functionality, such as the [`Subscribe`] trait, can still be used in
+//! `no_std` environments.
+//!
+//! The dependency on the standard library is controlled by two crate feature
+//! flags, "std", which enables the dependency on [`libstd`], and "alloc", which
+//! enables the dependency on [`liballoc`] (and is enabled by the "std"
+//! feature). These features are enabled by default, but `no_std` users can
+//! disable them using:
+//!
+//! ```toml
+//! # Cargo.toml
+//! tracing-subscriber = { version = "0.3", default-features = false }
+//! ```
+//!
+//! Additional APIs are available when [`liballoc`] is available. To enable
+//! `liballoc` but not `std`, use:
+//!
+//! ```toml
+//! # Cargo.toml
+//! tracing-subscriber = { version = "0.3", default-features = false, features = ["alloc"] }
+//! ```
+//!
+>>>>>>> origin/master
 //! ## Supported Rust Versions
 //!
 //! Tracing is built against the latest stable release. The minimum supported
@@ -149,10 +222,23 @@
 //! supported compiler version is not considered a semver breaking change as
 //! long as doing so complies with this policy.
 //!
+<<<<<<< HEAD
 //! [`Subscriber`]: tracing_core::subscriber::Subscriber
 //! [`tracing`]: https://docs.rs/tracing/latest/tracing
 //! [`EnvFilter`]: filter::EnvFilter
 //! [`fmt`]: mod@fmt
+||||||| 386969ba
+//! [`tracing`]: https://docs.rs/tracing/latest/tracing/
+//! [`Subscriber`]: https://docs.rs/tracing-core/latest/tracing_core/subscriber/trait.Subscriber.html
+//! [`EnvFilter`]: filter/struct.EnvFilter.html
+//! [`fmt`]: fmt/index.html
+=======
+//! [`fmt`]: mod@fmt
+//! [`registry`]: mod@registry
+//! [`Collect`]: tracing_core::collect::Collect
+//! [collector]: tracing_core::collect::Collect
+//! [`EnvFilter`]: filter::EnvFilter
+>>>>>>> origin/master
 //! [`tracing-log`]: https://crates.io/crates/tracing-log
 //! [`smallvec`]: https://crates.io/crates/smallvec
 //! [`env_logger` crate]: https://crates.io/crates/env_logger
@@ -162,6 +248,7 @@
 //! [`libstd`]: https://doc.rust-lang.org/std/index.html
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo-type.png",
+    html_favicon_url = "https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/favicon.ico",
     issue_tracker_base_url = "https://github.com/tokio-rs/tracing/issues/"
 )]
 #![cfg_attr(
@@ -212,10 +299,20 @@ pub mod field;
 pub mod filter;
 pub mod prelude;
 pub mod registry;
+<<<<<<< HEAD
 
 pub mod layer;
+||||||| 386969ba
+pub mod reload;
+pub(crate) mod sync;
+pub(crate) mod thread;
+=======
+
+pub mod subscribe;
+>>>>>>> origin/master
 pub mod util;
 
+<<<<<<< HEAD
 feature! {
     #![feature = "std"]
     pub mod reload;
@@ -240,9 +337,110 @@ feature! {
     #![all(feature = "registry", feature = "std")]
     pub use registry::Registry;
 
+||||||| 386969ba
+#[cfg(feature = "env-filter")]
+#[cfg_attr(docsrs, doc(cfg(feature = "env-filter")))]
+pub use filter::EnvFilter;
+
+pub use layer::Layer;
+
+#[cfg(feature = "registry")]
+#[cfg_attr(docsrs, doc(cfg(feature = "registry")))]
+pub use registry::Registry;
+
+///
+#[cfg(feature = "registry")]
+#[cfg_attr(docsrs, doc(cfg(feature = "registry")))]
+pub fn registry() -> Registry {
+    Registry::default()
+}
+
+#[cfg(feature = "fmt")]
+#[cfg_attr(docsrs, doc(cfg(feature = "fmt")))]
+pub use fmt::Subscriber as FmtSubscriber;
+
+#[cfg(feature = "fmt")]
+#[cfg_attr(docsrs, doc(cfg(feature = "fmt")))]
+pub use fmt::fmt;
+
+use std::default::Default;
+/// Tracks the currently executing span on a per-thread basis.
+#[derive(Debug)]
+pub struct CurrentSpan {
+    current: thread::Local<Vec<Id>>,
+}
+
+impl CurrentSpan {
+    /// Returns a new `CurrentSpan`.
+    pub fn new() -> Self {
+        Self {
+            current: thread::Local::new(),
+        }
+    }
+
+    /// Returns the [`Id`] of the span in which the current thread is
+    /// executing, or `None` if it is not inside of a span.
+=======
+feature! {
+    #![feature = "std"]
+    pub mod reload;
+    pub(crate) mod sync;
+}
+
+feature! {
+    #![all(feature = "fmt", feature = "std")]
+    pub mod fmt;
+    pub use fmt::fmt;
+    pub use fmt::Subscriber as FmtSubscriber;
+}
+
+feature! {
+    #![all(feature = "env-filter", feature = "std")]
+    pub use filter::EnvFilter;
+}
+
+pub use subscribe::Subscribe;
+
+feature! {
+    #![all(feature = "registry", feature = "std")]
+    pub use registry::Registry;
+
+    /// Creates a default [`Registry`], a [`Collect`](tracing_core::Collect)
+    /// implementation which tracks per-span data and exposes it to
+    /// [`Subscribe`]s.
+>>>>>>> origin/master
     ///
+<<<<<<< HEAD
     pub fn registry() -> Registry {
         Registry::default()
+||||||| 386969ba
+    ///
+    /// [`Id`]: https://docs.rs/tracing/latest/tracing/span/struct.Id.html
+    pub fn id(&self) -> Option<Id> {
+        self.current.with(|current| current.last().cloned())?
+    }
+
+    /// Records that the current thread has entered the span with the provided ID.
+    pub fn enter(&self, span: Id) {
+        self.current.with(|current| current.push(span));
+    }
+
+    /// Records that the current thread has exited a span.
+    pub fn exit(&self) {
+        self.current.with(|current| {
+            let _ = current.pop();
+        });
+    }
+}
+
+impl Default for CurrentSpan {
+    fn default() -> Self {
+        Self::new()
+=======
+    /// Returns a default [`Registry`].
+    pub fn registry() -> Registry {
+        Registry::default()
+>>>>>>> origin/master
     }
 }
 

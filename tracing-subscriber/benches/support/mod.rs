@@ -1,9 +1,10 @@
 use std::{
+    io,
     sync::{Arc, Barrier},
     thread,
     time::{Duration, Instant},
 };
-use tracing::dispatcher::Dispatch;
+use tracing::dispatch::Dispatch;
 
 #[derive(Clone)]
 pub(super) struct MultithreadedBench {
@@ -12,6 +13,7 @@ pub(super) struct MultithreadedBench {
     dispatch: Dispatch,
 }
 
+#[allow(dead_code)]
 impl MultithreadedBench {
     pub(super) fn new(dispatch: Dispatch) -> Self {
         Self {
@@ -32,8 +34,16 @@ impl MultithreadedBench {
         let this = self.clone();
         thread::spawn(move || {
             let dispatch = this.dispatch.clone();
+<<<<<<< HEAD
             tracing::dispatcher::with_default(&dispatch, move || {
                 f(&this.start);
+||||||| 386969ba
+            tracing::dispatcher::with_default(&dispatch, move || {
+                f(&*this.start);
+=======
+            tracing::dispatch::with_default(&dispatch, move || {
+                f(&this.start);
+>>>>>>> origin/master
                 this.end.wait();
             })
         });
@@ -45,5 +55,29 @@ impl MultithreadedBench {
         let t0 = Instant::now();
         self.end.wait();
         t0.elapsed()
+    }
+}
+/// A fake writer that doesn't actually do anything.
+///
+/// We want to measure the collectors's overhead, *not* the performance of
+/// stdout/file writers. Using a no-op Write implementation lets us only measure
+/// the collectors's overhead.
+pub(super) struct NoWriter;
+
+#[allow(dead_code)]
+impl io::Write for NoWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+#[allow(dead_code)]
+impl NoWriter {
+    pub(super) fn new() -> Self {
+        Self
     }
 }

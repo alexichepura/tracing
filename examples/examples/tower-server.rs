@@ -1,10 +1,12 @@
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
 use futures::future;
 use http::{Request, Response};
 use hyper::{Body, Server};
 use std::task::{Context, Poll};
 use std::time::Duration;
 use tower::{Service, ServiceBuilder};
-use tracing::dispatcher;
+use tracing::dispatch;
 use tracing::info;
 use tracing_tower::request_span::make;
 
@@ -54,7 +56,7 @@ impl Service<Request<Body>> for Svc {
             rsp.headers = ?rsp.headers()
         );
 
-        dispatcher::get_default(|dispatch| {
+        dispatch::get_default(|dispatch| {
             let id = span.id().expect("Missing ID; this is a bug");
             if let Some(current) = dispatch.current_span().id() {
                 dispatch.record_follows_from(&id, current)

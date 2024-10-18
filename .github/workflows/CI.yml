@@ -35,8 +35,20 @@ jobs:
     name: cargo check
     runs-on: ubuntu-latest
     steps:
+<<<<<<< HEAD
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
+||||||| 386969ba
+    - uses: actions/checkout@main
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+=======
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+>>>>>>> origin/master
     - name: Check
       run: cargo check --all --tests --benches
 
@@ -46,9 +58,23 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
+<<<<<<< HEAD
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
+||||||| 386969ba
+    - name: Fetch latest release version of cargo-hack
+      run: |
+        mkdir -p .github/caching
+        curl -sL https://api.github.com/repos/taiki-e/cargo-hack/releases/latest | jq -r '.name' > .github/caching/cargo-hack.lock
+    - name: Cache cargo-hack/bin
+      id: cache-cargo-hack
+      uses: actions/cache@v1
+=======
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+>>>>>>> origin/master
       with:
+<<<<<<< HEAD
         components: rustfmt
     - name: rustfmt
       run: cargo fmt --all -- --check
@@ -60,6 +86,25 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
+||||||| 386969ba
+        path: ${{ runner.tool_cache }}/cargo-hack/bin
+        key: cargo-hack-bin-${{ hashFiles('.github/caching/cargo-hack.lock') }}
+    - name: Install cargo-hack
+      if: "steps.cache-cargo-hack.outputs.cache-hit != 'true'"
+      uses: actions-rs/cargo@v1
+=======
+        components: rustfmt
+    - name: rustfmt
+      run: cargo fmt --all -- --check
+
+  warnings:
+    # Check for any warnings. This is informational and thus is allowed to fail.
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+>>>>>>> origin/master
       with:
         components: clippy
     - name: Clippy
@@ -88,10 +133,37 @@ jobs:
         - tracing
         - tracing-subscriber
     steps:
+<<<<<<< HEAD
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
     - name: install cargo-hack
       uses: taiki-e/install-action@cargo-hack
+||||||| 386969ba
+    - uses: actions/checkout@main
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+    - name: Fetch latest release version of cargo-hack
+      run: |
+        mkdir -p .github/caching
+        curl -sL https://api.github.com/repos/taiki-e/cargo-hack/releases/latest | jq -r '.name' > .github/caching/cargo-hack.lock
+    - name: Restore cargo-hack/bin
+      uses: actions/cache@v1
+      with:
+        path: ${{ runner.tool_cache }}/cargo-hack/bin
+        key: cargo-hack-bin-${{ hashFiles('.github/caching/cargo-hack.lock') }}
+    - run: echo "::add-path::${{ runner.tool_cache }}/cargo-hack/bin"
+    # if `cargo-hack` somehow doesn't exist after loading it from the cache,
+    # make *sure* it's there.
+    - run: cargo hack --help || { cargo install --force cargo-hack; }
+=======
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - name: install cargo-hack
+      uses: taiki-e/install-action@cargo-hack
+>>>>>>> origin/master
     - name: cargo hack check
       working-directory: ${{ matrix.subcrate }}
       # tracing and tracing-subscriber have too many features to be checked by
@@ -146,6 +218,7 @@ jobs:
         - 1.63.0
         - stable
     steps:
+<<<<<<< HEAD
     - uses: actions/checkout@v3
     - name: install Rust nightly
       uses: dtolnay/rust-toolchain@nightly
@@ -213,6 +286,78 @@ jobs:
     - uses: actions/checkout@v3
     - name: "install Rust ${{ matrix.rust }}"
       uses: dtolnay/rust-toolchain@master
+||||||| 386969ba
+    - uses: actions/checkout@main
+    - uses: actions-rs/toolchain@v1
+=======
+    - uses: actions/checkout@v4
+    - name: install Rust nightly
+      uses: dtolnay/rust-toolchain@nightly
+    - name: "install Rust ${{ matrix.toolchain }}"
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.toolchain }}
+    - name: install cargo-hack
+      uses: taiki-e/install-action@cargo-hack
+    - name: install cargo-minimal-versions
+      uses: taiki-e/install-action@cargo-minimal-versions
+    - name: cargo minimal-versions check
+      working-directory: ${{ matrix.subcrate }}
+      # tracing and tracing-subscriber have too many features to be checked by
+      # cargo-hack --feature-powerset with all features in the powerset, so
+      # exclude some
+      run: |
+        CARGO_MINVER=(cargo minimal-versions check --feature-powerset --no-dev-deps)
+        case "${{ matrix.subcrate }}" in
+          tracing)
+            EXCLUDE_FEATURES=(
+              max_level_off max_level_error max_level_warn max_level_info
+              max_level_debug max_level_trace release_max_level_off
+              release_max_level_error release_max_level_warn
+              release_max_level_info release_max_level_debug
+              release_max_level_trace
+            )
+            ${CARGO_MINVER[@]} --exclude-features "${EXCLUDE_FEATURES[*]}"
+            ;;
+          tracing-subscriber)
+            INCLUDE_FEATURES=(fmt ansi json registry env-filter)
+            ${CARGO_MINVER[@]} --include-features "${INCLUDE_FEATURES[*]}"
+            ;;
+          tracing-futures)
+            EXCLUDE_FEATURES=(futures-01 futures_01 tokio tokio_01)
+            ${CARGO_MINVER[@]} --exclude-features "${EXCLUDE_FEATURES[*]}"
+            ;;
+          *)
+            ${CARGO_MINVER[@]}
+            ;;
+        esac
+      shell: bash
+
+  ### test jobs #############################################################
+
+  test:
+    # Test against stable Rust across macOS, Windows, and Linux, and against
+    # beta and nightly rust on Ubuntu.
+    name: "cargo test (${{ matrix.rust }} on ${{ matrix.os }})"
+    needs: check
+    strategy:
+      matrix:
+        # test all Rust versions on ubuntu-latest
+        os: [ubuntu-latest]
+        rust: [stable, beta, nightly]
+        # test stable Rust on Windows and MacOS as well
+        include:
+          - rust: stable
+            os: windows-latest
+          - rust: stable
+            os: macos-latest
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: "install Rust ${{ matrix.rust }}"
+      uses: dtolnay/rust-toolchain@master
+>>>>>>> origin/master
       with:
         toolchain: ${{ matrix.rust }}
     - name: install cargo-nextest
@@ -252,8 +397,16 @@ jobs:
         - tracing-tower
       fail-fast: false
     steps:
+<<<<<<< HEAD
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
+||||||| 386969ba
+    - uses: actions/checkout@main
+    - uses: actions-rs/toolchain@v1
+=======
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+>>>>>>> origin/master
       with:
         target: wasm32-unknown-unknown
     - name: build all tests
@@ -268,8 +421,16 @@ jobs:
         subcrate:
         - tracing
     steps:
+<<<<<<< HEAD
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
+||||||| 386969ba
+    - uses: actions/checkout@main
+    - uses: actions-rs/toolchain@v1
+=======
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+>>>>>>> origin/master
       with:
         target: wasm32-unknown-unknown
     - name: install test runner for wasm
@@ -283,16 +444,36 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
+<<<<<<< HEAD
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
+||||||| 386969ba
+    - uses: actions/checkout@main
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+=======
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+>>>>>>> origin/master
     - name: "Test log support"
       run: cargo test
     - name: "Test static max level"
+<<<<<<< HEAD
       run: cargo test
       working-directory: "tracing/test_static_max_level_features"
     - name: "Test static max level (release)"
       run: cargo test --release
       working-directory: "tracing/test_static_max_level_features"
+||||||| 386969ba
+      run: (cd tracing/test_static_max_level_features && cargo test)
+=======
+      run: cargo test
+    - name: "Test static max level (release)"
+      run: cargo test --release
+>>>>>>> origin/master
     - name: "Test tracing-core no-std support"
       run: cargo test --no-default-features
     - name: "Test tracing no-std support"
@@ -315,4 +496,43 @@ jobs:
       - test-wasm
       - test-features-stable
     steps:
+<<<<<<< HEAD
       - run: exit 0
+||||||| 386969ba
+    - uses: actions/checkout@main
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: clippy
+        profile: minimal
+    - name: Clippy
+      uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all --bins --examples --tests --benches -- -D warnings
+
+  cargo-audit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: Fetch latest release version of cargo-audit
+      run: |
+        mkdir -p .github/caching
+        cargo search cargo-audit | grep '^cargo-audit' | awk '{gsub(/"/,"",$3); print $3}' > .github/caching/cargo-audit.lock
+    - name: Cache cargo-audit/bin
+      id: cache-cargo-audit
+      uses: actions/cache@v1
+      with:
+        path: ${{ runner.tool_cache }}/cargo-audit/bin
+        key: cargo-audit-bin-${{ hashFiles('.github/caching/cargo-audit.lock') }}
+    - name: Install cargo-audit
+      if: "steps.cache-cargo-audit.outputs.cache-hit != 'true'"
+      uses: actions-rs/cargo@v1
+      with:
+        command: install
+        args: --root ${{ runner.tool_cache }}/cargo-audit --force cargo-audit
+    - run: echo "::add-path::${{ runner.tool_cache }}/cargo-audit/bin"
+    - run: cargo audit
+=======
+      - run: exit 0
+>>>>>>> origin/master

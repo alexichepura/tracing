@@ -1,3 +1,5 @@
+//! NOTE: This is pre-release documentation for the upcoming tracing 0.2.0 ecosystem. For the
+//! release examples, please see the `v0.1.x` branch instead.
 #![deny(rust_2018_idioms)]
 
 use tracing::{debug, span, Level};
@@ -11,10 +13,10 @@ fn suggest_band() -> String {
 }
 
 fn main() {
-    let subscriber = tracing_subscriber::fmt()
+    let collector = tracing_subscriber::fmt()
         .with_env_filter("attrs_literal_field_names=trace")
         .finish();
-    tracing::subscriber::with_default(subscriber, || {
+    tracing::collect::with_default(collector, || {
         let span = span!(Level::TRACE, "get_band_rec", "guid:x-request-id" = "abcdef");
         let _enter = span.enter();
         suggest_band();

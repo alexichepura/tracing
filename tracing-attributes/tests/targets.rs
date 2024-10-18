@@ -1,4 +1,13 @@
+<<<<<<< HEAD
 use tracing::subscriber::with_default;
+||||||| 386969ba
+mod support;
+use support::*;
+
+use tracing::subscriber::with_default;
+=======
+use tracing::collect::with_default;
+>>>>>>> origin/master
 use tracing_attributes::instrument;
 use tracing_mock::*;
 
@@ -22,7 +31,7 @@ mod my_mod {
 
 #[test]
 fn default_targets() {
-    let (subscriber, handle) = subscriber::mock()
+    let (collector, handle) = collector::mock()
         .new_span(
             expect::span()
                 .named("default_target")
@@ -56,7 +65,7 @@ fn default_targets() {
         .only()
         .run_with_handle();
 
-    with_default(subscriber, || {
+    with_default(collector, || {
         default_target();
         my_mod::default_target();
     });
@@ -66,7 +75,16 @@ fn default_targets() {
 
 #[test]
 fn custom_targets() {
+<<<<<<< HEAD
     let (subscriber, handle) = subscriber::mock()
+||||||| 386969ba
+    let (subscriber, handle) = subscriber::mock()
+        .new_span(span::mock().named("custom_target").with_target("my_target"))
+        .enter(span::mock().named("custom_target").with_target("my_target"))
+        .exit(span::mock().named("custom_target").with_target("my_target"))
+=======
+    let (collector, handle) = collector::mock()
+>>>>>>> origin/master
         .new_span(
             expect::span()
                 .named("custom_target")
@@ -100,7 +118,7 @@ fn custom_targets() {
         .only()
         .run_with_handle();
 
-    with_default(subscriber, || {
+    with_default(collector, || {
         custom_target();
         my_mod::custom_target();
     });
