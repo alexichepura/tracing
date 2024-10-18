@@ -601,7 +601,9 @@ impl Inner {
                 {
                     return None;
                 }
-
+                #[cfg(target_os = "android")]
+                let created = metadata.modified().ok()?;
+                #[cfg(not(target_os = "android"))]
                 let created = metadata.created().ok()?;
                 Some((entry, created))
             })
